@@ -14,7 +14,7 @@ export declare enum OtpStatus {
 }
 export declare class Otp {
     _id?: string;
-    email: string;
+    phone: string;
     otp_code: string;
     type: OtpType;
     status: OtpStatus;
@@ -43,7 +43,7 @@ export declare const OtpSchema: import("mongoose").Schema<Otp, import("mongoose"
     }, "id"> & {
         id: string;
     }> | undefined;
-    email?: import("mongoose").SchemaDefinitionProperty<string, Otp, import("mongoose").Document<unknown, {}, Otp, {
+    phone?: import("mongoose").SchemaDefinitionProperty<string, Otp, import("mongoose").Document<unknown, {}, Otp, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Otp & Required<{
         _id: string;

@@ -7,6 +7,10 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { AuthModule } from './auth/auth.module';
+import { PostsModule } from './posts/posts.module';
+import { FeedsModule } from './feeds/feeds.module';
+import { QueuesModule } from './queues/queues.module';
+import { UploadModule } from './upload/upload.module';
 import { mongooseConfig } from './config/database.config';
 import { redisConfig } from './config/redis.config';
 
@@ -27,9 +31,13 @@ import { redisConfig } from './config/redis.config';
       inject: [ConfigService],
       useFactory: redisConfig,
     }),
+    QueuesModule,
     UsersModule,
     PermissionsModule,
     AuthModule,
+    PostsModule,
+    FeedsModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -11,6 +11,7 @@ export declare class UsersService {
     findById(id: string): Promise<User | null>;
     findByUsername(username: string): Promise<User | null>;
     findByEmail(email: string): Promise<User | null>;
+    findByPhone(phone: string): Promise<User | null>;
     update(id: string, updateUserDto: Partial<CreateUserDto>): Promise<User | null>;
     remove(id: string): Promise<void>;
     verifyPassword(password: string, passwordHash: string): Promise<boolean>;

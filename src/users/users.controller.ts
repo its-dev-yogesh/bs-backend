@@ -1,8 +1,22 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Put,
+  Delete,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { User, UserStatus } from './schemas/user.schema';
+import { User } from './schemas/user.schema';
 
 @ApiTags('Users')
 @Controller('users')
@@ -17,7 +31,10 @@ export class UsersController {
     description: 'User registered successfully',
     type: User,
   })
-  @ApiResponse({ status: 400, description: 'Invalid input or user already exists' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input or user already exists',
+  })
   async create(@Body() createUserDto: CreateUserDto): Promise<User> {
     return this.usersService.create(createUserDto);
   }
@@ -55,7 +72,9 @@ export class UsersController {
     type: User,
   })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async findByUsername(@Param('username') username: string): Promise<User | null> {
+  async findByUsername(
+    @Param('username') username: string,
+  ): Promise<User | null> {
     return this.usersService.findByUsername(username);
   }
 

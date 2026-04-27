@@ -55,7 +55,10 @@ __decorate([
         description: 'User registered successfully',
         type: user_schema_1.User,
     }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid input or user already exists' }),
+    (0, swagger_1.ApiResponse)({
+        status: 400,
+        description: 'Invalid input or user already exists',
+    }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto]),

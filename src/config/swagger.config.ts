@@ -1,6 +1,7 @@
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Request, Response, NextFunction } from 'express';
 
 export const setupSwagger = (
   app: INestApplication,
@@ -93,7 +94,7 @@ export const setupProductionSwagger = (
   }
 
   // Setup basic auth for production
-  const auth = (req: any, res: any, next: any) => {
+  const auth = (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {

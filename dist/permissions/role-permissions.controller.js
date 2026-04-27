@@ -55,7 +55,10 @@ __decorate([
         description: 'Permission assigned to role successfully',
         type: role_permission_schema_1.RolePermission,
     }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Role-Permission mapping already exists' }),
+    (0, swagger_1.ApiResponse)({
+        status: 400,
+        description: 'Role-Permission mapping already exists',
+    }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_role_permission_dto_1.CreateRolePermissionDto]),
@@ -110,7 +113,10 @@ __decorate([
         status: 200,
         description: 'Permission removed from role successfully',
     }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Role-Permission mapping not found' }),
+    (0, swagger_1.ApiResponse)({
+        status: 404,
+        description: 'Role-Permission mapping not found',
+    }),
     __param(0, (0, common_1.Param)('role_name')),
     __param(1, (0, common_1.Param)('permission_id')),
     __metadata("design:type", Function),

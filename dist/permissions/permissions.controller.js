@@ -88,8 +88,16 @@ __decorate([
 __decorate([
     (0, common_1.Get)('module/:module/action/:action'),
     (0, swagger_1.ApiOperation)({ summary: 'Get permissions by module and action' }),
-    (0, swagger_1.ApiParam)({ name: 'module', description: 'Module name', enum: permission_schema_1.PermissionModule }),
-    (0, swagger_1.ApiParam)({ name: 'action', description: 'Action name', enum: permission_schema_1.PermissionAction }),
+    (0, swagger_1.ApiParam)({
+        name: 'module',
+        description: 'Module name',
+        enum: permission_schema_1.PermissionModule,
+    }),
+    (0, swagger_1.ApiParam)({
+        name: 'action',
+        description: 'Action name',
+        enum: permission_schema_1.PermissionAction,
+    }),
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'Permissions found',

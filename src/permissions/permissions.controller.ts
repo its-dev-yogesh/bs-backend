@@ -1,8 +1,26 @@
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Put,
+  Delete,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
 import { PermissionsService } from './permissions.service';
 import { CreatePermissionDto } from './dto/create-permission.dto';
-import { Permission, PermissionModule, PermissionAction } from './schemas/permission.schema';
+import {
+  Permission,
+  PermissionModule,
+  PermissionAction,
+} from './schemas/permission.schema';
 
 @ApiTags('Permissions')
 @Controller('permissions')
@@ -18,7 +36,9 @@ export class PermissionsController {
     type: Permission,
   })
   @ApiResponse({ status: 400, description: 'Permission already exists' })
-  async create(@Body() createPermissionDto: CreatePermissionDto): Promise<Permission> {
+  async create(
+    @Body() createPermissionDto: CreatePermissionDto,
+  ): Promise<Permission> {
     return this.permissionsService.create(createPermissionDto);
   }
 
@@ -48,8 +68,16 @@ export class PermissionsController {
 
   @Get('module/:module/action/:action')
   @ApiOperation({ summary: 'Get permissions by module and action' })
-  @ApiParam({ name: 'module', description: 'Module name', enum: PermissionModule })
-  @ApiParam({ name: 'action', description: 'Action name', enum: PermissionAction })
+  @ApiParam({
+    name: 'module',
+    description: 'Module name',
+    enum: PermissionModule,
+  })
+  @ApiParam({
+    name: 'action',
+    description: 'Action name',
+    enum: PermissionAction,
+  })
   @ApiResponse({
     status: 200,
     description: 'Permissions found',

@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Model } from 'mongoose';
@@ -11,9 +11,12 @@ export class UserProfileService {
   constructor(
     @InjectModel(UserProfile.name) private userProfileModel: Model<UserProfile>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) { }
+  ) {}
 
-  async create(user_id: string, createUserProfileDto: CreateUserProfileDto): Promise<UserProfile> {
+  async create(
+    user_id: string,
+    createUserProfileDto: CreateUserProfileDto,
+  ): Promise<UserProfile> {
     // Check if profile already exists for this user
     const existingProfile = await this.userProfileModel.findOne({ user_id });
     if (existingProfile) {
@@ -53,7 +56,10 @@ export class UserProfileService {
     return profile;
   }
 
-  async update(user_id: string, updateUserProfileDto: Partial<CreateUserProfileDto>): Promise<UserProfile | null> {
+  async update(
+    user_id: string,
+    updateUserProfileDto: Partial<CreateUserProfileDto>,
+  ): Promise<UserProfile | null> {
     const updatedProfile = await this.userProfileModel
       .findOneAndUpdate({ user_id }, updateUserProfileDto, { new: true })
       .exec();

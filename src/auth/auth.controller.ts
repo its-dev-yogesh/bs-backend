@@ -1,7 +1,18 @@
 import { Controller, Post, Body, UseGuards, Get } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService, AuthResponse } from './auth.service';
-import { RegisterDto, LoginDto, VerifyOtpDto, RefreshTokenDto, ResendOtpDto } from './dto/auth.dto';
+import {
+  RegisterDto,
+  LoginDto,
+  VerifyOtpDto,
+  RefreshTokenDto,
+  ResendOtpDto,
+} from './dto/auth.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -13,18 +24,18 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  @ApiOperation({ summary: 'Register a new user with email' })
+  @ApiOperation({ summary: 'Register a new user with phone (OTP via SMS)' })
   @ApiResponse({
     status: 201,
-    description: 'User registered. Check email for OTP.',
+    description: 'User registered. Check phone for OTP.',
     schema: {
       example: {
-        email: 'user@example.com',
-        message: 'Registration successful. Check your email for OTP.',
+        phone: '+919876543210',
+        message: 'Registration successful. Check your phone for OTP.',
       },
     },
   })
-  @ApiResponse({ status: 400, description: 'Email already registered' })
+  @ApiResponse({ status: 400, description: 'Phone number already registered' })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
@@ -37,19 +48,21 @@ export class AuthController {
     type: AuthResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Invalid OTP' })
-  async verifyRegistration(@Body() verifyOtpDto: VerifyOtpDto): Promise<AuthResponse> {
+  async verifyRegistration(
+    @Body() verifyOtpDto: VerifyOtpDto,
+  ): Promise<AuthResponse> {
     return this.authService.verifyRegistrationOtp(verifyOtpDto);
   }
 
   @Post('login')
-  @ApiOperation({ summary: 'Initiate login with email (OTP-based)' })
+  @ApiOperation({ summary: 'Initiate login with phone (OTP via SMS)' })
   @ApiResponse({
     status: 201,
-    description: 'OTP sent to email',
+    description: 'OTP sent to phone',
     schema: {
       example: {
-        email: 'user@example.com',
-        message: 'OTP sent to your email. Please verify to complete login.',
+        phone: '+919876543210',
+        message: 'OTP sent to your phone. Please verify to complete login.',
       },
     },
   })
@@ -71,14 +84,14 @@ export class AuthController {
   }
 
   @Post('resend-otp')
-  @ApiOperation({ summary: 'Resend OTP to email' })
+  @ApiOperation({ summary: 'Resend OTP via SMS' })
   @ApiResponse({
     status: 200,
     description: 'OTP resent',
     schema: {
       example: {
-        email: 'user@example.com',
-        message: 'OTP resent to your email.',
+        phone: '+919876543210',
+        message: 'OTP resent to your phone.',
       },
     },
   })
@@ -100,7 +113,7 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: 'Invalid refresh token' })
-  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
+  refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshAccessToken(refreshTokenDto);
   }
 
@@ -114,7 +127,7 @@ export class AuthController {
     type: User,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getCurrentUser(@CurrentUser() user: User): Promise<User> {
+  getCurrentUser(@CurrentUser() user: User): User {
     return user;
   }
 
@@ -132,7 +145,7 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async logout(@CurrentUser() user: User) {
+  logout() {
     // Token will be invalidated on client side (removal from local storage)
     return { message: 'Logged out successfully' };
   }

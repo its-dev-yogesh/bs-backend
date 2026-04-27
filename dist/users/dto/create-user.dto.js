@@ -15,9 +15,9 @@ const class_validator_1 = require("class-validator");
 const user_schema_1 = require("../schemas/user.schema");
 class CreateUserDto {
     username;
+    phone;
     email;
     password;
-    phone;
     type;
 }
 exports.CreateUserDto = CreateUserDto;
@@ -32,10 +32,19 @@ __decorate([
 ], CreateUserDto.prototype, "username", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        example: 'john@example.com',
-        description: 'Email address (must be unique)',
+        example: '+919876543210',
+        description: 'Phone number (E.164, must be unique)',
     }),
     (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateUserDto.prototype, "phone", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        example: 'john@example.com',
+        description: 'Email address (optional)',
+        required: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "email", void 0);
@@ -49,15 +58,6 @@ __decorate([
     (0, class_validator_1.MinLength)(8),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "password", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        example: '+1234567890',
-        description: 'Phone number',
-        required: false,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], CreateUserDto.prototype, "phone", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         example: 'user',

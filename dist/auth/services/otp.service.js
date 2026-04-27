@@ -17,20 +17,21 @@ const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const otp_schema_1 = require("../schemas/otp.schema");
+const STUB_OTP_CODE = '123456';
 let OtpService = class OtpService {
     otpModel;
     constructor(otpModel) {
         this.otpModel = otpModel;
     }
     generateOtpCode() {
-        return Math.floor(100000 + Math.random() * 900000).toString();
+        return STUB_OTP_CODE;
     }
-    async createOtp(email, type, metadata) {
-        await this.otpModel.updateMany({ email, type, status: otp_schema_1.OtpStatus.PENDING }, { status: otp_schema_1.OtpStatus.EXPIRED });
+    async createOtp(phone, type, metadata) {
+        await this.otpModel.updateMany({ phone, type, status: otp_schema_1.OtpStatus.PENDING }, { status: otp_schema_1.OtpStatus.EXPIRED });
         const otp_code = this.generateOtpCode();
         const expires_at = new Date(Date.now() + 10 * 60 * 1000);
         const otp = new this.otpModel({
-            email,
+            phone,
             otp_code,
             type,
             status: otp_schema_1.OtpStatus.PENDING,
@@ -41,9 +42,9 @@ let OtpService = class OtpService {
         });
         return otp.save();
     }
-    async verifyOtp(email, otp_code, type) {
+    async verifyOtp(phone, otp_code, type) {
         const otp = await this.otpModel.findOne({
-            email,
+            phone,
             type,
             status: otp_schema_1.OtpStatus.PENDING,
         });
@@ -68,26 +69,23 @@ let OtpService = class OtpService {
         await this.otpModel.updateOne({ _id: otp._id }, { status: otp_schema_1.OtpStatus.VERIFIED });
         return { valid: true, message: 'OTP verified successfully', otp };
     }
-    async markAsUsed(email, type) {
-        await this.otpModel.updateOne({ email, type, status: otp_schema_1.OtpStatus.VERIFIED }, { status: otp_schema_1.OtpStatus.USED });
+    async markAsUsed(phone, type) {
+        await this.otpModel.updateOne({ phone, type, status: otp_schema_1.OtpStatus.VERIFIED }, { status: otp_schema_1.OtpStatus.USED });
     }
-    async getLatestOtp(email, type) {
+    async getLatestOtp(phone, type) {
         return this.otpModel
-            .findOne({ email, type })
+            .findOne({ phone, type })
             .sort({ createdAt: -1 })
             .exec();
     }
-    async isOtpValid(email, type) {
-        const otp = await this.getLatestOtp(email, type);
-        if (!otp) {
+    async isOtpValid(phone, type) {
+        const otp = await this.getLatestOtp(phone, type);
+        if (!otp)
             return false;
-        }
-        if (otp.status !== otp_schema_1.OtpStatus.VERIFIED) {
+        if (otp.status !== otp_schema_1.OtpStatus.VERIFIED)
             return false;
-        }
-        if (new Date() > otp.expires_at) {
+        if (new Date() > otp.expires_at)
             return false;
-        }
         return true;
     }
     async cleanupExpiredOtps() {

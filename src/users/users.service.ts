@@ -1,7 +1,7 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Model } from 'mongoose';
+import { HydratedDocument, Model } from 'mongoose';
 import type { Cache } from 'cache-manager';
 import * as bcrypt from 'bcrypt';
 import { User } from './schemas/user.schema';
@@ -17,20 +17,27 @@ export class UsersService {
   async create(createUserDto: CreateUserDto): Promise<User> {
     // Check if user already exists
     const existingUser = await this.userModel.findOne({
-      $or: [{ email: createUserDto.email }, { username: createUserDto.username }],
+      $or: [
+        { phone: createUserDto.phone },
+        { username: createUserDto.username },
+        ...(createUserDto.email ? [{ email: createUserDto.email }] : []),
+      ],
     });
 
     if (existingUser) {
-      throw new BadRequestException('User with this email or username already exists');
+      throw new BadRequestException(
+        'User with this phone, username, or email already exists',
+      );
     }
 
     // Hash password
     const password_hash = await bcrypt.hash(createUserDto.password, 10);
 
-    const { password, ...userPayload } = createUserDto;
-
     const createdUser = new this.userModel({
-      ...userPayload,
+      username: createUserDto.username,
+      phone: createUserDto.phone,
+      email: createUserDto.email,
+      type: createUserDto.type,
       password_hash,
     });
     const savedUser = await createdUser.save();
@@ -57,7 +64,7 @@ export class UsersService {
     // Store in cache for 5 minutes (300000ms)
     await this.cacheManager.set(cacheKey, users, 300000);
 
-    return users.map(user => this.sanitizeUser(user));
+    return users.map((user) => this.sanitizeUser(user));
   }
 
   async findById(id: string): Promise<User | null> {
@@ -129,7 +136,27 @@ export class UsersService {
     return null;
   }
 
-  async update(id: string, updateUserDto: Partial<CreateUserDto>): Promise<User | null> {
+  async findByPhone(phone: string): Promise<User | null> {
+    const cacheKey = `user_phone_${phone}`;
+
+    const cachedUser = await this.cacheManager.get<User>(cacheKey);
+    if (cachedUser) {
+      return cachedUser;
+    }
+
+    const user = await this.userModel.findOne({ phone }).exec();
+    if (user) {
+      const sanitized = this.sanitizeUser(user);
+      await this.cacheManager.set(cacheKey, sanitized, 300000);
+      return sanitized;
+    }
+    return null;
+  }
+
+  async update(
+    id: string,
+    updateUserDto: Partial<CreateUserDto>,
+  ): Promise<User | null> {
     const { password, ...updatePayload } = updateUserDto;
 
     // Hash password if provided
@@ -145,6 +172,9 @@ export class UsersService {
     await this.cacheManager.del(`user_${id}`);
     if (updateUserDto.email) {
       await this.cacheManager.del(`user_email_${updateUserDto.email}`);
+    }
+    if (updateUserDto.phone) {
+      await this.cacheManager.del(`user_phone_${updateUserDto.phone}`);
     }
     if (updateUserDto.username) {
       await this.cacheManager.del(`user_username_${updateUserDto.username}`);
@@ -162,13 +192,16 @@ export class UsersService {
     await this.cacheManager.del('all_users');
   }
 
-  async verifyPassword(password: string, passwordHash: string): Promise<boolean> {
+  verifyPassword(password: string, passwordHash: string): Promise<boolean> {
     return bcrypt.compare(password, passwordHash);
   }
 
-  private sanitizeUser(user: any): User {
-    const sanitized = user.toObject ? user.toObject() : user;
-    delete sanitized.password_hash;
-    return sanitized;
+  private sanitizeUser(user: HydratedDocument<User> | User): User {
+    const plain: Partial<User> =
+      'toObject' in user && typeof user.toObject === 'function'
+        ? user.toObject()
+        : { ...user };
+    delete plain.password_hash;
+    return plain as User;
   }
 }

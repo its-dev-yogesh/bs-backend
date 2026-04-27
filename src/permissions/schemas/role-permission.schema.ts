@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 
 export type RolePermissionDocument = HydratedDocument<RolePermission>;
@@ -44,9 +44,13 @@ export class RolePermission {
   updatedAt?: Date;
 }
 
-export const RolePermissionSchema = SchemaFactory.createForClass(RolePermission);
+export const RolePermissionSchema =
+  SchemaFactory.createForClass(RolePermission);
 
 // Create indexes for better query performance
 RolePermissionSchema.index({ role_name: 1 });
 RolePermissionSchema.index({ permission_id: 1 });
-RolePermissionSchema.index({ role_name: 1, permission_id: 1 }, { unique: true });
+RolePermissionSchema.index(
+  { role_name: 1, permission_id: 1 },
+  { unique: true },
+);

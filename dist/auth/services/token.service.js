@@ -44,7 +44,7 @@ let AuthTokenService = class AuthTokenService {
                 secret: this.configService.get('JWT_SECRET'),
             });
         }
-        catch (error) {
+        catch {
             return null;
         }
     }
@@ -54,7 +54,7 @@ let AuthTokenService = class AuthTokenService {
                 secret: this.configService.get('JWT_REFRESH_SECRET'),
             });
         }
-        catch (error) {
+        catch {
             return null;
         }
     }
@@ -62,7 +62,7 @@ let AuthTokenService = class AuthTokenService {
         try {
             return this.jwtService.decode(token);
         }
-        catch (error) {
+        catch {
             return null;
         }
     }

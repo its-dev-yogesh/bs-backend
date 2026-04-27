@@ -1,19 +1,19 @@
 export declare class RegisterDto {
     username: string;
-    email: string;
+    phone: string;
+    email?: string;
     password: string;
-    phone?: string;
 }
 export declare class LoginDto {
-    email: string;
+    phone: string;
 }
 export declare class VerifyOtpDto {
-    email: string;
+    phone: string;
     otp_code: string;
 }
 export declare class RefreshTokenDto {
     refresh_token: string;
 }
 export declare class ResendOtpDto {
-    email: string;
+    phone: string;
 }

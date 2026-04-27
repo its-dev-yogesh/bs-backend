@@ -9,11 +9,14 @@ import { CreateRolePermissionDto } from './dto/create-role-permission.dto';
 @Injectable()
 export class RolePermissionsService {
   constructor(
-    @InjectModel(RolePermission.name) private rolePermissionModel: Model<RolePermission>,
+    @InjectModel(RolePermission.name)
+    private rolePermissionModel: Model<RolePermission>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  async create(createRolePermissionDto: CreateRolePermissionDto): Promise<RolePermission> {
+  async create(
+    createRolePermissionDto: CreateRolePermissionDto,
+  ): Promise<RolePermission> {
     // Check if role-permission mapping already exists
     const existing = await this.rolePermissionModel.findOne({
       role_name: createRolePermissionDto.role_name,
@@ -21,14 +24,20 @@ export class RolePermissionsService {
     });
 
     if (existing) {
-      throw new BadRequestException('This role-permission mapping already exists');
+      throw new BadRequestException(
+        'This role-permission mapping already exists',
+      );
     }
 
-    const createdRolePermission = new this.rolePermissionModel(createRolePermissionDto);
+    const createdRolePermission = new this.rolePermissionModel(
+      createRolePermissionDto,
+    );
     const savedRolePermission = await createdRolePermission.save();
 
     // Clear cache
-    await this.cacheManager.del(`role_permissions_${createRolePermissionDto.role_name}`);
+    await this.cacheManager.del(
+      `role_permissions_${createRolePermissionDto.role_name}`,
+    );
 
     return savedRolePermission;
   }
@@ -37,7 +46,8 @@ export class RolePermissionsService {
     const cacheKey = `role_permissions_${role_name}`;
 
     // Try to get from cache
-    const cachedRolePermissions = await this.cacheManager.get<RolePermission[]>(cacheKey);
+    const cachedRolePermissions =
+      await this.cacheManager.get<RolePermission[]>(cacheKey);
     if (cachedRolePermissions) {
       console.log(`Returning permissions for role ${role_name} from cache`);
       return cachedRolePermissions;
@@ -60,7 +70,8 @@ export class RolePermissionsService {
     const cacheKey = 'all_role_permissions';
 
     // Try to get from cache
-    const cachedRolePermissions = await this.cacheManager.get<RolePermission[]>(cacheKey);
+    const cachedRolePermissions =
+      await this.cacheManager.get<RolePermission[]>(cacheKey);
     if (cachedRolePermissions) {
       console.log('Returning all role permissions from cache');
       return cachedRolePermissions;
@@ -79,13 +90,18 @@ export class RolePermissionsService {
     const cacheKey = `role_permissions_perm_${permission_id}`;
 
     // Try to get from cache
-    const cachedRolePermissions = await this.cacheManager.get<RolePermission[]>(cacheKey);
+    const cachedRolePermissions =
+      await this.cacheManager.get<RolePermission[]>(cacheKey);
     if (cachedRolePermissions) {
-      console.log(`Returning role permissions for permission ${permission_id} from cache`);
+      console.log(
+        `Returning role permissions for permission ${permission_id} from cache`,
+      );
       return cachedRolePermissions;
     }
 
-    console.log(`Fetching role permissions for permission ${permission_id} from database`);
+    console.log(
+      `Fetching role permissions for permission ${permission_id} from database`,
+    );
     const rolePermissions = await this.rolePermissionModel
       .find({ permission_id })
       .exec();

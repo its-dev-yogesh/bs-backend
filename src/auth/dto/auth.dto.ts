@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, MinLength, IsOptional } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsPhoneNumber,
+  Matches,
+  MinLength,
+} from 'class-validator';
 
 export class RegisterDto {
   @ApiProperty({
@@ -11,12 +18,21 @@ export class RegisterDto {
   username: string;
 
   @ApiProperty({
-    example: 'john@example.com',
-    description: 'Email address',
+    example: '+919876543210',
+    description: 'Phone number in E.164 format (used for OTP)',
   })
   @IsNotEmpty()
+  @IsPhoneNumber()
+  phone: string;
+
+  @ApiProperty({
+    example: 'john@example.com',
+    description: 'Email address (optional)',
+    required: false,
+  })
+  @IsOptional()
   @IsEmail()
-  email: string;
+  email?: string;
 
   @ApiProperty({
     example: 'SecurePassword123!',
@@ -26,41 +42,33 @@ export class RegisterDto {
   @IsNotEmpty()
   @MinLength(8)
   password: string;
-
-  @ApiProperty({
-    example: '+1234567890',
-    description: 'Phone number (optional)',
-    required: false,
-  })
-  @IsOptional()
-  phone?: string;
 }
 
 export class LoginDto {
   @ApiProperty({
-    example: 'john@example.com',
-    description: 'Email address',
+    example: '+919876543210',
+    description: 'Phone number in E.164 format',
   })
   @IsNotEmpty()
-  @IsEmail()
-  email: string;
+  @IsPhoneNumber()
+  phone: string;
 }
 
 export class VerifyOtpDto {
   @ApiProperty({
-    example: 'john@example.com',
-    description: 'Email address',
+    example: '+919876543210',
+    description: 'Phone number in E.164 format',
   })
   @IsNotEmpty()
-  @IsEmail()
-  email: string;
+  @IsPhoneNumber()
+  phone: string;
 
   @ApiProperty({
     example: '123456',
     description: 'OTP code (6 digits)',
   })
   @IsNotEmpty()
-  @MinLength(6)
+  @Matches(/^\d{6}$/, { message: 'otp_code must be a 6-digit number' })
   otp_code: string;
 }
 
@@ -75,10 +83,10 @@ export class RefreshTokenDto {
 
 export class ResendOtpDto {
   @ApiProperty({
-    example: 'john@example.com',
-    description: 'Email address',
+    example: '+919876543210',
+    description: 'Phone number in E.164 format',
   })
   @IsNotEmpty()
-  @IsEmail()
-  email: string;
+  @IsPhoneNumber()
+  phone: string;
 }

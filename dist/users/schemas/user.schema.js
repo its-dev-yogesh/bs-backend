@@ -28,8 +28,8 @@ let User = class User {
     id;
     _id;
     username;
-    email;
     phone;
+    email;
     password_hash;
     is_verified;
     type;
@@ -63,20 +63,20 @@ __decorate([
 __decorate([
     (0, mongoose_1.Prop)({ required: true, unique: true }),
     (0, swagger_1.ApiProperty)({
-        description: 'Email address',
-        example: 'john@example.com',
-    }),
-    __metadata("design:type", String)
-], User.prototype, "email", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    (0, swagger_1.ApiProperty)({
-        description: 'Phone number',
-        example: '+1234567890',
-        required: false,
+        description: 'Phone number (E.164 format)',
+        example: '+919876543210',
     }),
     __metadata("design:type", String)
 ], User.prototype, "phone", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ unique: true, sparse: true }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Email address (optional)',
+        example: 'john@example.com',
+        required: false,
+    }),
+    __metadata("design:type", String)
+], User.prototype, "email", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     (0, swagger_1.ApiProperty)({
@@ -130,7 +130,7 @@ exports.User = User = __decorate([
 ], User);
 exports.UserSchema = mongoose_1.SchemaFactory.createForClass(User);
 exports.UserSchema.index({ username: 1 });
-exports.UserSchema.index({ email: 1 });
+exports.UserSchema.index({ phone: 1 });
 exports.UserSchema.index({ type: 1 });
 exports.UserSchema.index({ status: 1 });
 //# sourceMappingURL=user.schema.js.map

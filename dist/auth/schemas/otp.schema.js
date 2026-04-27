@@ -28,7 +28,7 @@ var OtpStatus;
 })(OtpStatus || (exports.OtpStatus = OtpStatus = {}));
 let Otp = class Otp {
     _id;
-    email;
+    phone;
     otp_code;
     type;
     status;
@@ -49,11 +49,11 @@ __decorate([
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     (0, swagger_1.ApiProperty)({
-        description: 'Email address for OTP',
-        example: 'user@example.com',
+        description: 'Phone number for OTP (E.164 format)',
+        example: '+919876543210',
     }),
     __metadata("design:type", String)
-], Otp.prototype, "email", void 0);
+], Otp.prototype, "phone", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     (0, swagger_1.ApiProperty)({
@@ -81,7 +81,10 @@ __decorate([
     __metadata("design:type", String)
 ], Otp.prototype, "status", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true, default: () => new Date(Date.now() + 10 * 60 * 1000) }),
+    (0, mongoose_1.Prop)({
+        required: true,
+        default: () => new Date(Date.now() + 10 * 60 * 1000),
+    }),
     (0, swagger_1.ApiProperty)({
         description: 'OTP expiration time (10 minutes)',
         example: '2024-04-26T19:10:00.000Z',
@@ -105,7 +108,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Otp.prototype, "max_attempts", void 0);
 __decorate([
-    (0, mongoose_1.Prop)(),
+    (0, mongoose_1.Prop)({ type: Object }),
     (0, swagger_1.ApiProperty)({
         description: 'Additional metadata',
         required: false,
@@ -130,7 +133,7 @@ exports.Otp = Otp = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Otp);
 exports.OtpSchema = mongoose_1.SchemaFactory.createForClass(Otp);
-exports.OtpSchema.index({ email: 1 });
+exports.OtpSchema.index({ phone: 1 });
 exports.OtpSchema.index({ otp_code: 1 });
 exports.OtpSchema.index({ expires_at: 1 }, { expireAfterSeconds: 0 });
 exports.OtpSchema.index({ type: 1 });

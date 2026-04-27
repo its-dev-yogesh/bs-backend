@@ -39,18 +39,18 @@ export class User {
 
   @Prop({ required: true, unique: true })
   @ApiProperty({
-    description: 'Email address',
-    example: 'john@example.com',
+    description: 'Phone number (E.164 format)',
+    example: '+919876543210',
   })
-  email: string;
+  phone: string;
 
-  @Prop()
+  @Prop({ unique: true, sparse: true })
   @ApiProperty({
-    description: 'Phone number',
-    example: '+1234567890',
+    description: 'Email address (optional)',
+    example: 'john@example.com',
     required: false,
   })
-  phone?: string;
+  email?: string;
 
   @Prop({ required: true })
   @ApiProperty({
@@ -99,7 +99,6 @@ export const UserSchema = SchemaFactory.createForClass(User);
 
 // Create indexes for better query performance
 UserSchema.index({ username: 1 });
-UserSchema.index({ email: 1 });
+UserSchema.index({ phone: 1 });
 UserSchema.index({ type: 1 });
 UserSchema.index({ status: 1 });
-

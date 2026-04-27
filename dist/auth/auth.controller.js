@@ -41,31 +41,31 @@ let AuthController = class AuthController {
     async resendOtp(resendOtpDto) {
         return this.authService.resendOtp(resendOtpDto);
     }
-    async refreshToken(refreshTokenDto) {
+    refreshToken(refreshTokenDto) {
         return this.authService.refreshAccessToken(refreshTokenDto);
     }
-    async getCurrentUser(user) {
+    getCurrentUser(user) {
         return user;
     }
-    async logout(user) {
+    logout() {
         return { message: 'Logged out successfully' };
     }
 };
 exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('register'),
-    (0, swagger_1.ApiOperation)({ summary: 'Register a new user with email' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Register a new user with phone (OTP via SMS)' }),
     (0, swagger_1.ApiResponse)({
         status: 201,
-        description: 'User registered. Check email for OTP.',
+        description: 'User registered. Check phone for OTP.',
         schema: {
             example: {
-                email: 'user@example.com',
-                message: 'Registration successful. Check your email for OTP.',
+                phone: '+919876543210',
+                message: 'Registration successful. Check your phone for OTP.',
             },
         },
     }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Email already registered' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Phone number already registered' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [auth_dto_1.RegisterDto]),
@@ -87,14 +87,14 @@ __decorate([
 ], AuthController.prototype, "verifyRegistration", null);
 __decorate([
     (0, common_1.Post)('login'),
-    (0, swagger_1.ApiOperation)({ summary: 'Initiate login with email (OTP-based)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Initiate login with phone (OTP via SMS)' }),
     (0, swagger_1.ApiResponse)({
         status: 201,
-        description: 'OTP sent to email',
+        description: 'OTP sent to phone',
         schema: {
             example: {
-                email: 'user@example.com',
-                message: 'OTP sent to your email. Please verify to complete login.',
+                phone: '+919876543210',
+                message: 'OTP sent to your phone. Please verify to complete login.',
             },
         },
     }),
@@ -120,14 +120,14 @@ __decorate([
 ], AuthController.prototype, "verifyOtp", null);
 __decorate([
     (0, common_1.Post)('resend-otp'),
-    (0, swagger_1.ApiOperation)({ summary: 'Resend OTP to email' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Resend OTP via SMS' }),
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'OTP resent',
         schema: {
             example: {
-                email: 'user@example.com',
-                message: 'OTP resent to your email.',
+                phone: '+919876543210',
+                message: 'OTP resent to your phone.',
             },
         },
     }),
@@ -154,7 +154,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [auth_dto_1.RefreshTokenDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], AuthController.prototype, "refreshToken", null);
 __decorate([
     (0, common_1.Get)('me'),
@@ -170,7 +170,7 @@ __decorate([
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [user_schema_1.User]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", user_schema_1.User)
 ], AuthController.prototype, "getCurrentUser", null);
 __decorate([
     (0, common_1.Post)('logout'),
@@ -187,10 +187,9 @@ __decorate([
         },
     }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
-    __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [user_schema_1.User]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
 ], AuthController.prototype, "logout", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('Authentication'),

@@ -14,9 +14,9 @@ const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class RegisterDto {
     username;
+    phone;
     email;
     password;
-    phone;
 }
 exports.RegisterDto = RegisterDto;
 __decorate([
@@ -30,10 +30,20 @@ __decorate([
 ], RegisterDto.prototype, "username", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        example: 'john@example.com',
-        description: 'Email address',
+        example: '+919876543210',
+        description: 'Phone number in E.164 format (used for OTP)',
     }),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsPhoneNumber)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "phone", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        example: 'john@example.com',
+        description: 'Email address (optional)',
+        required: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "email", void 0);
@@ -47,49 +57,40 @@ __decorate([
     (0, class_validator_1.MinLength)(8),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "password", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        example: '+1234567890',
-        description: 'Phone number (optional)',
-        required: false,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], RegisterDto.prototype, "phone", void 0);
 class LoginDto {
-    email;
+    phone;
 }
 exports.LoginDto = LoginDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
-        example: 'john@example.com',
-        description: 'Email address',
+        example: '+919876543210',
+        description: 'Phone number in E.164 format',
     }),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsPhoneNumber)(),
     __metadata("design:type", String)
-], LoginDto.prototype, "email", void 0);
+], LoginDto.prototype, "phone", void 0);
 class VerifyOtpDto {
-    email;
+    phone;
     otp_code;
 }
 exports.VerifyOtpDto = VerifyOtpDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
-        example: 'john@example.com',
-        description: 'Email address',
+        example: '+919876543210',
+        description: 'Phone number in E.164 format',
     }),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsPhoneNumber)(),
     __metadata("design:type", String)
-], VerifyOtpDto.prototype, "email", void 0);
+], VerifyOtpDto.prototype, "phone", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         example: '123456',
         description: 'OTP code (6 digits)',
     }),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.MinLength)(6),
+    (0, class_validator_1.Matches)(/^\d{6}$/, { message: 'otp_code must be a 6-digit number' }),
     __metadata("design:type", String)
 ], VerifyOtpDto.prototype, "otp_code", void 0);
 class RefreshTokenDto {
@@ -105,16 +106,16 @@ __decorate([
     __metadata("design:type", String)
 ], RefreshTokenDto.prototype, "refresh_token", void 0);
 class ResendOtpDto {
-    email;
+    phone;
 }
 exports.ResendOtpDto = ResendOtpDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
-        example: 'john@example.com',
-        description: 'Email address',
+        example: '+919876543210',
+        description: 'Phone number in E.164 format',
     }),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsPhoneNumber)(),
     __metadata("design:type", String)
-], ResendOtpDto.prototype, "email", void 0);
+], ResendOtpDto.prototype, "phone", void 0);
 //# sourceMappingURL=auth.dto.js.map

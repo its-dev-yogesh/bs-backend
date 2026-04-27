@@ -61,15 +61,21 @@ let UsersService = class UsersService {
     }
     async create(createUserDto) {
         const existingUser = await this.userModel.findOne({
-            $or: [{ email: createUserDto.email }, { username: createUserDto.username }],
+            $or: [
+                { phone: createUserDto.phone },
+                { username: createUserDto.username },
+                ...(createUserDto.email ? [{ email: createUserDto.email }] : []),
+            ],
         });
         if (existingUser) {
-            throw new common_1.BadRequestException('User with this email or username already exists');
+            throw new common_1.BadRequestException('User with this phone, username, or email already exists');
         }
         const password_hash = await bcrypt.hash(createUserDto.password, 10);
-        const { password, ...userPayload } = createUserDto;
         const createdUser = new this.userModel({
-            ...userPayload,
+            username: createUserDto.username,
+            phone: createUserDto.phone,
+            email: createUserDto.email,
+            type: createUserDto.type,
             password_hash,
         });
         const savedUser = await createdUser.save();
@@ -86,7 +92,7 @@ let UsersService = class UsersService {
         console.log('Fetching users from database');
         const users = await this.userModel.find().exec();
         await this.cacheManager.set(cacheKey, users, 300000);
-        return users.map(user => this.sanitizeUser(user));
+        return users.map((user) => this.sanitizeUser(user));
     }
     async findById(id) {
         const cacheKey = `user_${id}`;
@@ -136,6 +142,20 @@ let UsersService = class UsersService {
         }
         return null;
     }
+    async findByPhone(phone) {
+        const cacheKey = `user_phone_${phone}`;
+        const cachedUser = await this.cacheManager.get(cacheKey);
+        if (cachedUser) {
+            return cachedUser;
+        }
+        const user = await this.userModel.findOne({ phone }).exec();
+        if (user) {
+            const sanitized = this.sanitizeUser(user);
+            await this.cacheManager.set(cacheKey, sanitized, 300000);
+            return sanitized;
+        }
+        return null;
+    }
     async update(id, updateUserDto) {
         const { password, ...updatePayload } = updateUserDto;
         if (password) {
@@ -148,6 +168,9 @@ let UsersService = class UsersService {
         if (updateUserDto.email) {
             await this.cacheManager.del(`user_email_${updateUserDto.email}`);
         }
+        if (updateUserDto.phone) {
+            await this.cacheManager.del(`user_phone_${updateUserDto.phone}`);
+        }
         if (updateUserDto.username) {
             await this.cacheManager.del(`user_username_${updateUserDto.username}`);
         }
@@ -159,13 +182,15 @@ let UsersService = class UsersService {
         await this.cacheManager.del(`user_${id}`);
         await this.cacheManager.del('all_users');
     }
-    async verifyPassword(password, passwordHash) {
+    verifyPassword(password, passwordHash) {
         return bcrypt.compare(password, passwordHash);
     }
     sanitizeUser(user) {
-        const sanitized = user.toObject ? user.toObject() : user;
-        delete sanitized.password_hash;
-        return sanitized;
+        const plain = 'toObject' in user && typeof user.toObject === 'function'
+            ? user.toObject()
+            : { ...user };
+        delete plain.password_hash;
+        return plain;
     }
 };
 exports.UsersService = UsersService;

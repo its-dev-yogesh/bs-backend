@@ -35,7 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.redisConfig = void 0;
 const redisStore = __importStar(require("cache-manager-redis-store"));
-const redisConfig = async (configService) => ({
+const redisConfig = (configService) => ({
     store: redisStore,
     host: configService.get('REDIS_HOST'),
     port: configService.get('REDIS_PORT'),

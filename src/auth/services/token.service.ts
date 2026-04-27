@@ -16,7 +16,7 @@ export class AuthTokenService {
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
-  ) { }
+  ) {}
 
   /**
    * Generate access token (short-lived)
@@ -41,7 +41,10 @@ export class AuthTokenService {
   /**
    * Generate both access and refresh tokens
    */
-  generateTokens(payload: JwtPayload): { access_token: string; refresh_token: string } {
+  generateTokens(payload: JwtPayload): {
+    access_token: string;
+    refresh_token: string;
+  } {
     return {
       access_token: this.generateAccessToken(payload),
       refresh_token: this.generateRefreshToken(payload),
@@ -53,10 +56,10 @@ export class AuthTokenService {
    */
   verifyAccessToken(token: string): JwtPayload | null {
     try {
-      return this.jwtService.verify(token, {
+      return this.jwtService.verify<JwtPayload>(token, {
         secret: this.configService.get<string>('JWT_SECRET'),
-      }) as JwtPayload;
-    } catch (error) {
+      });
+    } catch {
       return null;
     }
   }
@@ -66,10 +69,10 @@ export class AuthTokenService {
    */
   verifyRefreshToken(token: string): JwtPayload | null {
     try {
-      return this.jwtService.verify(token, {
+      return this.jwtService.verify<JwtPayload>(token, {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-      }) as JwtPayload;
-    } catch (error) {
+      });
+    } catch {
       return null;
     }
   }
@@ -79,8 +82,8 @@ export class AuthTokenService {
    */
   decodeToken(token: string): JwtPayload | null {
     try {
-      return this.jwtService.decode(token) as JwtPayload;
-    } catch (error) {
+      return this.jwtService.decode(token);
+    } catch {
       return null;
     }
   }

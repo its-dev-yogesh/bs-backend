@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsEmail, IsEnum, IsDateString } from 'class-validator';
+import { IsOptional, IsEnum, IsDateString } from 'class-validator';
 import { Gender } from '../schemas/user-profile.schema';
 
 export class CreateUserProfileDto {

@@ -16,6 +16,10 @@ const app_service_1 = require("./app.service");
 const users_module_1 = require("./users/users.module");
 const permissions_module_1 = require("./permissions/permissions.module");
 const auth_module_1 = require("./auth/auth.module");
+const posts_module_1 = require("./posts/posts.module");
+const feeds_module_1 = require("./feeds/feeds.module");
+const queues_module_1 = require("./queues/queues.module");
+const upload_module_1 = require("./upload/upload.module");
 const database_config_1 = require("./config/database.config");
 const redis_config_1 = require("./config/redis.config");
 let AppModule = class AppModule {
@@ -39,9 +43,13 @@ exports.AppModule = AppModule = __decorate([
                 inject: [config_1.ConfigService],
                 useFactory: redis_config_1.redisConfig,
             }),
+            queues_module_1.QueuesModule,
             users_module_1.UsersModule,
             permissions_module_1.PermissionsModule,
             auth_module_1.AuthModule,
+            posts_module_1.PostsModule,
+            feeds_module_1.FeedsModule,
+            upload_module_1.UploadModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

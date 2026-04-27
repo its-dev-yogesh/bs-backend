@@ -4,14 +4,14 @@ export declare class OtpService {
     private otpModel;
     constructor(otpModel: Model<Otp>);
     generateOtpCode(): string;
-    createOtp(email: string, type: OtpType, metadata?: Record<string, any>): Promise<Otp>;
-    verifyOtp(email: string, otp_code: string, type: OtpType): Promise<{
+    createOtp(phone: string, type: OtpType, metadata?: Record<string, any>): Promise<Otp>;
+    verifyOtp(phone: string, otp_code: string, type: OtpType): Promise<{
         valid: boolean;
         message: string;
         otp?: Otp;
     }>;
-    markAsUsed(email: string, type: OtpType): Promise<void>;
-    getLatestOtp(email: string, type: OtpType): Promise<Otp | null>;
-    isOtpValid(email: string, type: OtpType): Promise<boolean>;
+    markAsUsed(phone: string, type: OtpType): Promise<void>;
+    getLatestOtp(phone: string, type: OtpType): Promise<Otp | null>;
+    isOtpValid(phone: string, type: OtpType): Promise<boolean>;
     cleanupExpiredOtps(): Promise<void>;
 }

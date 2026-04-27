@@ -27,10 +27,10 @@ export class Otp {
 
   @Prop({ required: true })
   @ApiProperty({
-    description: 'Email address for OTP',
-    example: 'user@example.com',
+    description: 'Phone number for OTP (E.164 format)',
+    example: '+919876543210',
   })
-  email: string;
+  phone: string;
 
   @Prop({ required: true })
   @ApiProperty({
@@ -55,7 +55,10 @@ export class Otp {
   })
   status: OtpStatus;
 
-  @Prop({ required: true, default: () => new Date(Date.now() + 10 * 60 * 1000) })
+  @Prop({
+    required: true,
+    default: () => new Date(Date.now() + 10 * 60 * 1000),
+  })
   @ApiProperty({
     description: 'OTP expiration time (10 minutes)',
     example: '2024-04-26T19:10:00.000Z',
@@ -76,7 +79,7 @@ export class Otp {
   })
   max_attempts: number;
 
-  @Prop()
+  @Prop({ type: Object })
   @ApiProperty({
     description: 'Additional metadata',
     required: false,
@@ -99,7 +102,7 @@ export class Otp {
 export const OtpSchema = SchemaFactory.createForClass(Otp);
 
 // Create indexes for better query performance
-OtpSchema.index({ email: 1 });
+OtpSchema.index({ phone: 1 });
 OtpSchema.index({ otp_code: 1 });
 OtpSchema.index({ expires_at: 1 }, { expireAfterSeconds: 0 }); // TTL index
 OtpSchema.index({ type: 1 });

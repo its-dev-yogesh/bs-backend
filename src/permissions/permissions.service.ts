@@ -38,7 +38,8 @@ export class PermissionsService {
     const cacheKey = 'all_permissions';
 
     // Try to get from cache
-    const cachedPermissions = await this.cacheManager.get<Permission[]>(cacheKey);
+    const cachedPermissions =
+      await this.cacheManager.get<Permission[]>(cacheKey);
     if (cachedPermissions) {
       console.log('Returning permissions from cache');
       return cachedPermissions;
@@ -81,7 +82,8 @@ export class PermissionsService {
     const cacheKey = `permissions_${module}_${action}`;
 
     // Try to get from cache
-    const cachedPermissions = await this.cacheManager.get<Permission[]>(cacheKey);
+    const cachedPermissions =
+      await this.cacheManager.get<Permission[]>(cacheKey);
     if (cachedPermissions) {
       console.log(`Returning permissions for ${module}:${action} from cache`);
       return cachedPermissions;

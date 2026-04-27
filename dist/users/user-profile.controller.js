@@ -47,7 +47,10 @@ __decorate([
         description: 'Profile created successfully',
         type: user_profile_schema_1.UserProfile,
     }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid input or profile already exists' }),
+    (0, swagger_1.ApiResponse)({
+        status: 400,
+        description: 'Invalid input or profile already exists',
+    }),
     __param(0, (0, common_1.Param)('userId')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),

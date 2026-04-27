@@ -13,8 +13,8 @@ export declare class User {
     id?: string;
     _id?: string;
     username: string;
-    email: string;
-    phone?: string;
+    phone: string;
+    email?: string;
     password_hash: string;
     is_verified: boolean;
     type: UserType;
@@ -58,7 +58,7 @@ export declare const UserSchema: import("mongoose").Schema<User, import("mongoos
     }, "id"> & {
         id: string;
     }> | undefined;
-    email?: import("mongoose").SchemaDefinitionProperty<string, User, import("mongoose").Document<unknown, {}, User, {
+    phone?: import("mongoose").SchemaDefinitionProperty<string, User, import("mongoose").Document<unknown, {}, User, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<User & Required<{
         _id: string;
@@ -67,7 +67,7 @@ export declare const UserSchema: import("mongoose").Schema<User, import("mongoos
     }, "id"> & {
         id: string;
     }> | undefined;
-    phone?: import("mongoose").SchemaDefinitionProperty<string | undefined, User, import("mongoose").Document<unknown, {}, User, {
+    email?: import("mongoose").SchemaDefinitionProperty<string | undefined, User, import("mongoose").Document<unknown, {}, User, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<User & Required<{
         _id: string;
