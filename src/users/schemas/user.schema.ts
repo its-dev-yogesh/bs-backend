@@ -24,7 +24,7 @@ export class User {
   })
   id?: string;
 
-  @Prop({ default: () => uuidv4(), unique: true })
+  @Prop({ default: () => uuidv4() })
   @ApiProperty({
     description: 'MongoDB ID',
   })
@@ -98,7 +98,5 @@ export class User {
 export const UserSchema = SchemaFactory.createForClass(User);
 
 // Create indexes for better query performance
-UserSchema.index({ username: 1 });
-UserSchema.index({ phone: 1 });
 UserSchema.index({ type: 1 });
 UserSchema.index({ status: 1 });

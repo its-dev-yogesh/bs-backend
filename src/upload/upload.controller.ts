@@ -149,7 +149,7 @@ export class UploadController {
     return { images, videos, documents };
   }
 
-  @Delete(':key(*)')
+  @Delete('*key')
   @ApiOperation({ summary: 'Delete an uploaded file from S3 by key' })
   @ApiResponse({ status: 200, description: 'File deleted' })
   async remove(@Param('key') key: string): Promise<{ deleted: boolean; key: string }> {

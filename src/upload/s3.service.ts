@@ -32,7 +32,7 @@ export class S3Service implements OnModuleInit {
 
   onModuleInit() {
     this.region = this.configService.get<string>('AWS_REGION', 'ap-south-1');
-    this.bucket = this.configService.get<string>('AWS_S3_BUCKET', '');
+    this.bucket = this.configService.get<string>('AWS_S3_BUCKET_NAME', '');
     this.keyPrefix = (this.configService.get<string>('AWS_S3_KEY_PREFIX', '') || '')
       .replace(/^\/+|\/+$/g, '');
     this.publicUrlBase = this.configService.get<string>('AWS_S3_PUBLIC_URL') || undefined;
@@ -41,7 +41,7 @@ export class S3Service implements OnModuleInit {
     const secretAccessKey = this.configService.get<string>('AWS_SECRET_ACCESS_KEY');
 
     if (!this.bucket) {
-      this.logger.warn('AWS_S3_BUCKET is not set — uploads will fail until configured.');
+      this.logger.warn('AWS_S3_BUCKET_NAME is not set — uploads will fail until configured.');
     }
 
     this.client = new S3Client({

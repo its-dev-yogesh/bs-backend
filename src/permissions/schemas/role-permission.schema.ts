@@ -16,7 +16,7 @@ export class RolePermission {
   })
   _id?: string;
 
-  @Prop({ required: true, enum: RoleType, index: true })
+  @Prop({ required: true, enum: RoleType })
   @ApiProperty({
     description: 'Role name',
     enum: RoleType,
@@ -48,7 +48,6 @@ export const RolePermissionSchema =
   SchemaFactory.createForClass(RolePermission);
 
 // Create indexes for better query performance
-RolePermissionSchema.index({ role_name: 1 });
 RolePermissionSchema.index({ permission_id: 1 });
 RolePermissionSchema.index(
   { role_name: 1, permission_id: 1 },

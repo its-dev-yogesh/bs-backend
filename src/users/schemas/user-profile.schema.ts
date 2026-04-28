@@ -19,7 +19,7 @@ export class UserProfile {
   })
   id?: string;
 
-  @Prop({ default: () => uuidv4(), unique: true })
+  @Prop({ default: () => uuidv4() })
   @ApiProperty({
     description: 'MongoDB ID',
   })
