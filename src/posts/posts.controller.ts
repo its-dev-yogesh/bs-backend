@@ -50,9 +50,8 @@ export class PostsController {
   @Post('requirements')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('jwt-auth')
-  @ApiOperation({ summary: 'Create a property requirement (users only)' })
+  @ApiOperation({ summary: 'Create a property requirement' })
   @ApiResponse({ status: 201, description: 'Requirement post created' })
-  @ApiResponse({ status: 403, description: 'Only users can post requirements' })
   createRequirement(
     @CurrentUser() user: User,
     @Body() dto: CreateRequirementPostDto,

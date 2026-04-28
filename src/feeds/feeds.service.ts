@@ -65,10 +65,12 @@ export class FeedsService {
     user_id: string,
     user_type: UserType,
   ): Promise<{ generated: number }> {
-    const targetType =
-      user_type === UserType.AGENT ? PostType.REQUIREMENT : PostType.LISTING;
+    const targetTypes: PostType | PostType[] =
+      user_type === UserType.AGENT
+        ? [PostType.REQUIREMENT, PostType.LISTING]
+        : PostType.LISTING;
 
-    const posts = await this.postsService.findActiveByType(targetType);
+    const posts = await this.postsService.findActiveByType(targetTypes);
 
     await this.feedModel.deleteMany({ user_id }).exec();
 

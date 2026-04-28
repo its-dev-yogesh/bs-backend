@@ -21,7 +21,7 @@ export class FeedsController {
   @Get()
   @ApiOperation({
     summary:
-      "Get the authenticated user's feed. Agents see requirement posts; users see listing posts. Sorted by score desc.",
+      "Get the authenticated user's feed. Agents see both listings and requirements; users see only listings. Sorted by score desc.",
   })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'skip', required: false, type: Number })
@@ -44,7 +44,7 @@ export class FeedsController {
   @Post('regenerate')
   @ApiOperation({
     summary:
-      "Rebuild the current user's feed from active posts of the role-relevant type. Score is set to 0 — replace with real scoring later.",
+      "Rebuild the current user's feed from active posts. Agents get listings + requirements; users get listings only. Score is set to 0 — replace with real scoring later.",
   })
   regenerate(@CurrentUser() user: User) {
     return this.feedsService.regenerate(user._id ?? user.id ?? '', user.type);

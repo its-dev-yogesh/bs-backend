@@ -30,21 +30,24 @@ export class PostFanoutProcessor extends WorkerHost {
     const { post_id, author_user_id, post_type } = job.data;
 
     /*
-     * Naive fan-out: insert this post into the feed of every counterparty user.
-     * In production this needs targeting + scoring; today it just makes the
-     * post discoverable via /feeds without a manual /feeds/regenerate.
+     * Naive fan-out: insert this post into the feed of every user whose role
+     * is allowed to see this post type. Listings are visible to both users
+     * and agents; requirements are visible to agents only. Replace with real
+     * targeting + scoring later.
      */
-    const counterpartyType =
-      post_type === 'listing' ? UserType.USER : UserType.AGENT;
+    const targetTypes =
+      post_type === 'listing'
+        ? [UserType.USER, UserType.AGENT]
+        : [UserType.AGENT];
 
     const targetUsers = await this.userModel
-      .find({ type: counterpartyType, _id: { $ne: author_user_id } })
+      .find({ type: { $in: targetTypes }, _id: { $ne: author_user_id } })
       .select({ _id: 1 })
       .lean()
       .exec();
 
     if (targetUsers.length === 0) {
-      this.logger.log(`No counterparty users for post ${post_id}`);
+      this.logger.log(`No target users for post ${post_id}`);
       return { inserted: 0 };
     }
 
@@ -59,7 +62,7 @@ export class PostFanoutProcessor extends WorkerHost {
     const result = await this.feedModel.bulkWrite(ops, { ordered: false });
     const inserted = (result.upsertedCount ?? 0) + (result.modifiedCount ?? 0);
     this.logger.log(
-      `Fanned out post ${post_id} to ${targetUsers.length} ${counterpartyType}s (${inserted} entries)`,
+      `Fanned out post ${post_id} (${post_type}) to ${targetUsers.length} users (${inserted} entries)`,
     );
     return { inserted };
   }

@@ -78,13 +78,9 @@ export class PostsService {
 
   async createRequirement(
     user_id: string,
-    user_type: UserType,
+    _user_type: UserType,
     dto: CreateRequirementPostDto,
   ): Promise<PostWithDetails> {
-    if (user_type !== UserType.USER) {
-      throw new ForbiddenException('Only users can post requirements');
-    }
-
     const post = await this.createBasePost(user_id, PostType.REQUIREMENT, dto);
     const requirement = await this.requirementModel.create({
       post_id: post._id,
@@ -208,10 +204,10 @@ export class PostsService {
       .exec();
   }
 
-  async findActiveByType(type: PostType): Promise<Post[]> {
+  async findActiveByType(type: PostType | PostType[]): Promise<Post[]> {
     return this.postModel
       .find({
-        type,
+        type: Array.isArray(type) ? { $in: type } : type,
         status: PostStatus.ACTIVE,
         visibility: PostVisibility.PUBLIC,
       })
