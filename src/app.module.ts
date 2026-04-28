@@ -11,6 +11,7 @@ import { PostsModule } from './posts/posts.module';
 import { FeedsModule } from './feeds/feeds.module';
 import { QueuesModule } from './queues/queues.module';
 import { UploadModule } from './upload/upload.module';
+import { SeedModule } from './seed/seed.module';
 import { mongooseConfig } from './config/database.config';
 import { redisConfig } from './config/redis.config';
 
@@ -38,6 +39,7 @@ import { redisConfig } from './config/redis.config';
     PostsModule,
     FeedsModule,
     UploadModule,
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [AppService],
