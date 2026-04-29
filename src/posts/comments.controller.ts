@@ -38,9 +38,14 @@ export class CommentsController {
   }
 
   @Get('posts/:post_id/comments')
-  @ApiOperation({ summary: 'List all comments on a post (flat)' })
-  findByPost(@Param('post_id') post_id: string) {
-    return this.commentsService.findByPost(post_id);
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt-auth')
+  @ApiOperation({
+    summary:
+      'List all comments on a post (flat). Each comment is enriched with like_count and is_liked for the requesting user.',
+  })
+  findByPost(@Param('post_id') post_id: string, @CurrentUser() user: User) {
+    return this.commentsService.findByPost(post_id, user._id ?? user.id ?? '');
   }
 
   @Get('comments/:comment_id/replies')
@@ -52,7 +57,9 @@ export class CommentsController {
   @Delete('comments/:comment_id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('jwt-auth')
-  @ApiOperation({ summary: 'Delete a comment (author only)' })
+  @ApiOperation({
+    summary: 'Delete a comment (comment author or post owner)',
+  })
   remove(@Param('comment_id') comment_id: string, @CurrentUser() user: User) {
     return this.commentsService.remove(comment_id, user._id ?? user.id ?? '');
   }

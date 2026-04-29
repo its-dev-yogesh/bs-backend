@@ -49,6 +49,21 @@ export class ReactionsService {
     return this.reactionModel.find({ post_id }).sort({ createdAt: -1 }).exec();
   }
 
+  async findUserReactionsForPosts(
+    user_id: string,
+    post_ids: string[],
+  ): Promise<Map<string, ReactionType>> {
+    const result = new Map<string, ReactionType>();
+    if (!user_id || post_ids.length === 0) return result;
+    const rows = await this.reactionModel
+      .find({ user_id, post_id: { $in: post_ids } })
+      .select({ post_id: 1, type: 1 })
+      .lean()
+      .exec();
+    for (const row of rows) result.set(row.post_id, row.type);
+    return result;
+  }
+
   async countsByPost(post_id: string): Promise<ReactionCounts> {
     const results = await this.reactionModel
       .aggregate<{

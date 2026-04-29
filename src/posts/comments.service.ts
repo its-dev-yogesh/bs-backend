@@ -8,12 +8,19 @@ import { Model } from 'mongoose';
 import { Comment } from './schemas/comment.schema';
 import { Post } from './schemas/post.schema';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { CommentReactionsService } from './comment-reactions.service';
+
+export type EnrichedComment = Comment & {
+  like_count: number;
+  is_liked: boolean;
+};
 
 @Injectable()
 export class CommentsService {
   constructor(
     @InjectModel(Comment.name) private commentModel: Model<Comment>,
     @InjectModel(Post.name) private postModel: Model<Post>,
+    private readonly reactionsService: CommentReactionsService,
   ) {}
 
   async create(
@@ -43,8 +50,32 @@ export class CommentsService {
     });
   }
 
-  async findByPost(post_id: string): Promise<Comment[]> {
-    return this.commentModel.find({ post_id }).sort({ createdAt: 1 }).exec();
+  async findByPost(
+    post_id: string,
+    current_user_id?: string,
+  ): Promise<EnrichedComment[]> {
+    const comments = await this.commentModel
+      .find({ post_id })
+      .sort({ createdAt: 1 })
+      .lean()
+      .exec();
+
+    const ids = comments
+      .map((c) => c._id)
+      .filter((v): v is string => typeof v === 'string');
+
+    const [counts, likedSet] = await Promise.all([
+      this.reactionsService.countsByComments(ids),
+      current_user_id
+        ? this.reactionsService.likedSetForUser(current_user_id, ids)
+        : Promise.resolve(new Set<string>()),
+    ]);
+
+    return comments.map((c) => ({
+      ...(c as Comment),
+      like_count: counts.get(c._id ?? '') ?? 0,
+      is_liked: likedSet.has(c._id ?? ''),
+    }));
   }
 
   async findReplies(parent_id: string): Promise<Comment[]> {
@@ -60,9 +91,24 @@ export class CommentsService {
     if (!comment) {
       throw new NotFoundException('Comment not found');
     }
-    if (comment.user_id !== user_id) {
-      throw new BadRequestException("Cannot delete another user's comment");
+
+    if (comment.user_id === user_id) {
+      await this.commentModel.findByIdAndDelete(comment_id).exec();
+      return;
     }
-    await this.commentModel.findByIdAndDelete(comment_id).exec();
+
+    const post = await this.postModel
+      .findById(comment.post_id)
+      .select({ user_id: 1 })
+      .lean()
+      .exec();
+    if (post && post.user_id === user_id) {
+      await this.commentModel.findByIdAndDelete(comment_id).exec();
+      return;
+    }
+
+    throw new BadRequestException(
+      'Only the comment author or post owner can delete this comment',
+    );
   }
 }

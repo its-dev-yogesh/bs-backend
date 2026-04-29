@@ -38,6 +38,21 @@ export class SavedPostsService {
     return !!found;
   }
 
+  async savedSetForUser(
+    user_id: string,
+    post_ids: string[],
+  ): Promise<Set<string>> {
+    const result = new Set<string>();
+    if (!user_id || post_ids.length === 0) return result;
+    const rows = await this.savedPostModel
+      .find({ user_id, post_id: { $in: post_ids } })
+      .select({ post_id: 1 })
+      .lean()
+      .exec();
+    for (const row of rows) result.add(row.post_id);
+    return result;
+  }
+
   async countByPost(post_id: string): Promise<number> {
     return this.savedPostModel.countDocuments({ post_id }).exec();
   }

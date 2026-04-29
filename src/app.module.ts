@@ -9,6 +9,9 @@ import { PermissionsModule } from './permissions/permissions.module';
 import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
 import { FeedsModule } from './feeds/feeds.module';
+import { FollowsModule } from './follows/follows.module';
+import { InquiriesModule } from './inquiries/inquiries.module';
+import { MeModule } from './me/me.module';
 import { QueuesModule } from './queues/queues.module';
 import { UploadModule } from './upload/upload.module';
 import { SeedModule } from './seed/seed.module';
@@ -37,7 +40,10 @@ import { redisConfig } from './config/redis.config';
     PermissionsModule,
     AuthModule,
     PostsModule,
+    FollowsModule,
+    InquiriesModule,
     FeedsModule,
+    MeModule,
     UploadModule,
     SeedModule,
   ],
