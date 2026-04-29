@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsEnum, IsDateString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsOptional, IsEnum, IsDateString, IsNumber, Max, Min } from 'class-validator';
 import { Gender } from '../schemas/user-profile.schema';
 
 export class CreateUserProfileDto {
@@ -10,6 +11,14 @@ export class CreateUserProfileDto {
   })
   @IsOptional()
   full_name?: string;
+
+  @ApiProperty({
+    example: 'Commercial broker · Mumbai',
+    description: 'Professional headline',
+    required: false,
+  })
+  @IsOptional()
+  headline?: string;
 
   @ApiProperty({
     example: 'Real estate agent with 10+ years of experience',
@@ -26,6 +35,70 @@ export class CreateUserProfileDto {
   })
   @IsOptional()
   avatar_url?: string;
+
+  @ApiProperty({
+    example: 40,
+    description: 'Vertical crop focus for avatar image (0 top, 100 bottom)',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  avatar_position_y?: number;
+
+  @ApiProperty({
+    example: 1.25,
+    description: 'Avatar zoom level for crop framing (1x-3x)',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(3)
+  avatar_zoom?: number;
+
+  @ApiProperty({
+    example: 'https://example.com/banners/cover.jpg',
+    description: 'Banner / cover image URL',
+    required: false,
+  })
+  @IsOptional()
+  banner_url?: string;
+
+  @ApiProperty({
+    example: 35,
+    description: 'Vertical crop focus for banner image (0 top, 100 bottom)',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  banner_position_y?: number;
+
+  @ApiProperty({
+    example: 1.2,
+    description: 'Banner zoom level for crop framing (1x-3x)',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(3)
+  banner_zoom?: number;
+
+  @ApiProperty({
+    example: 'ocean',
+    description: 'Banner theme preset key',
+    required: false,
+  })
+  @IsOptional()
+  banner_theme?: string;
 
   @ApiProperty({
     example: 'https://www.johndoe.com',

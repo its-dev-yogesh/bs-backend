@@ -8,6 +8,7 @@ export type PostMediaDocument = HydratedDocument<PostMedia>;
 export enum MediaType {
   IMAGE = 'image',
   VIDEO = 'video',
+  DOCUMENT = 'document',
 }
 
 @Schema({ timestamps: true, collection: 'post_media' })

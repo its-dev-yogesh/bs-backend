@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -23,7 +23,7 @@ import { UsersModule } from '../users/users.module';
       }),
     }),
     MongooseModule.forFeature([{ name: Otp.name, schema: OtpSchema }]),
-    UsersModule,
+    forwardRef(() => UsersModule),
   ],
   controllers: [AuthController],
   providers: [AuthService, OtpService, AuthTokenService, JwtStrategy],

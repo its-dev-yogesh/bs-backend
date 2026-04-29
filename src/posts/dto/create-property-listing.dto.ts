@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsArray,
   IsDateString,
   IsEnum,
   IsInt,
@@ -72,6 +73,23 @@ export class CreatePropertyListingDto {
   @IsOptional()
   @IsDateString()
   available_from?: string;
+
+  @ApiProperty({ type: [String], required: false })
+  @IsOptional()
+  @IsArray()
+  amenities?: string[];
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  floor_plan_url?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  contact_phone?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  whatsapp_number?: string;
 }
 
 export class UpsertPropertyListingDto extends CreatePropertyListingDto {

@@ -14,6 +14,15 @@ import { UploadModule } from './upload/upload.module';
 import { SeedModule } from './seed/seed.module';
 import { mongooseConfig } from './config/database.config';
 import { redisConfig } from './config/redis.config';
+import { ConnectionsModule } from './connections/connections.module';
+import { MessagesModule } from './messages/messages.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { VerificationModule } from './verification/verification.module';
+import { ModerationModule } from './moderation/moderation.module';
+import { SearchModule } from './search/search.module';
+import { LeadsModule } from './leads/leads.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { MonetizationModule } from './monetization/monetization.module';
 
 @Module({
   imports: [
@@ -40,6 +49,15 @@ import { redisConfig } from './config/redis.config';
     FeedsModule,
     UploadModule,
     SeedModule,
+    ConnectionsModule,
+    MessagesModule,
+    NotificationsModule,
+    VerificationModule,
+    ModerationModule,
+    SearchModule,
+    LeadsModule,
+    AnalyticsModule,
+    MonetizationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -16,7 +16,7 @@ export interface ProcessMediaJobData {
   media_id: string;
   post_id: string;
   url: string;
-  type: 'image' | 'video';
+  type: 'image' | 'video' | 'document';
 }
 
 export interface SendOtpSmsJobData {
