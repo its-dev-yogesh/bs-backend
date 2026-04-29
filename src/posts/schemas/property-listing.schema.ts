@@ -23,6 +23,18 @@ export enum FurnishingType {
   UNFURNISHED = 'unfurnished',
 }
 
+export enum ProjectType {
+  RESIDENTIAL = 'Residential',
+  COMMERCIAL = 'Commercial',
+  INDUSTRIAL = 'Industrial',
+  MIXED_USE = 'Mixed Use',
+}
+
+export enum ProjectStatus {
+  READY_TO_MOVE = 'Ready to move',
+  UNDER_CONSTRUCTION = 'Under Construction',
+}
+
 @Schema({
   timestamps: { createdAt: true, updatedAt: false },
   collection: 'property_listings',
@@ -95,6 +107,22 @@ export class PropertyListing {
   @Prop()
   @ApiProperty({ required: false })
   whatsapp_number?: string;
+
+  @Prop({ enum: ProjectType })
+  @ApiProperty({ enum: ProjectType, required: false })
+  project_type?: ProjectType;
+
+  @Prop({ enum: ProjectStatus })
+  @ApiProperty({ enum: ProjectStatus, required: false })
+  project_status?: ProjectStatus;
+
+  @Prop()
+  @ApiProperty({ description: 'e.g. 2bhk, 3bhk, villa', required: false })
+  config?: string;
+
+  @Prop()
+  @ApiProperty({ description: 'Property address', required: false })
+  address?: string;
 
   @ApiProperty({ required: false })
   createdAt?: Date;

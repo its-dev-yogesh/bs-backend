@@ -68,6 +68,18 @@ export class PropertyRequirement {
   @ApiProperty({ type: [String], required: false })
   preferred_amenities?: string[];
 
+  @Prop()
+  @ApiProperty({ description: 'e.g. 2bhk, 3bhk, villa', required: false })
+  config?: string;
+
+  @Prop()
+  @ApiProperty({ description: 'e.g. Residential, Commercial', required: false })
+  project_type?: string;
+
+  @Prop()
+  @ApiProperty({ description: 'e.g. Ready to move, Under Construction', required: false })
+  project_status?: string;
+
   @ApiProperty({ required: false })
   createdAt?: Date;
 }

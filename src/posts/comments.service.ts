@@ -10,6 +10,7 @@ import { Post } from './schemas/post.schema';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { CommentLike } from './schemas/comment-like.schema';
 import { User } from '../users/schemas/user.schema';
+import { ReactionsService } from './reactions.service';
 
 export type EnrichedComment = Record<string, unknown> & {
   _id: string;
@@ -17,6 +18,8 @@ export type EnrichedComment = Record<string, unknown> & {
   user_id: string;
   username?: string;
   name?: string;
+  avatarUrl?: string;
+  headline?: string;
   parent_id?: string | null;
   content: string;
   createdAt?: Date;
@@ -33,6 +36,7 @@ export class CommentsService {
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(CommentLike.name)
     private readonly commentLikeModel: Model<CommentLike>,
+    private readonly reactionsService: ReactionsService,
   ) {}
 
   async create(
@@ -82,11 +86,19 @@ export class CommentsService {
     const userIds = Array.from(new Set(rows.map((r) => String(r.user_id))));
     const users = await this.userModel
       .find({ _id: { $in: userIds } })
-      .select('username')
+      .select('username name avatarUrl headline')
       .lean()
       .exec();
-    const usernameById = new Map(
-      users.map((u) => [String((u as { _id?: unknown })._id), String((u as { username?: unknown }).username ?? '')]),
+    const userMetadataById = new Map(
+      users.map((u) => [
+        String((u as any)._id),
+        {
+          username: String((u as any).username ?? ''),
+          name: (u as any).name,
+          avatarUrl: (u as any).avatarUrl,
+          headline: (u as any).headline,
+        },
+      ]),
     );
     const counts = await this.commentLikeModel
       .aggregate<{ _id: string; n: number }>([
@@ -108,13 +120,19 @@ export class CommentsService {
       likedSet = new Set(mine.map((m) => String(m.comment_id)));
     }
 
-    const enriched: EnrichedComment[] = rows.map((r) => ({
-      ...r,
-      _id: String(r._id),
-      username: usernameById.get(String(r.user_id)) || undefined,
-      likes_count: countMap.get(String(r._id)) ?? 0,
-      liked: likedSet.has(String(r._id)),
-    }));
+    const enriched: EnrichedComment[] = rows.map((r) => {
+      const meta = userMetadataById.get(String(r.user_id));
+      return {
+        ...r,
+        _id: String(r._id),
+        username: meta?.username,
+        name: meta?.name,
+        avatarUrl: meta?.avatarUrl,
+        headline: meta?.headline,
+        likes_count: countMap.get(String(r._id)) ?? 0,
+        liked: likedSet.has(String(r._id)),
+      };
+    });
 
     const buildTree = (parentId: string | null): EnrichedComment[] =>
       enriched

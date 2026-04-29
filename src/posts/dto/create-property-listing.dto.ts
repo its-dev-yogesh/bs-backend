@@ -13,6 +13,8 @@ import {
   FurnishingType,
   ListingType,
   PropertyType,
+  ProjectStatus,
+  ProjectType,
 } from '../schemas/property-listing.schema';
 
 export class CreatePropertyListingDto {
@@ -28,6 +30,24 @@ export class CreatePropertyListingDto {
   @ApiProperty({ enum: ListingType })
   @IsEnum(ListingType)
   listing_type: ListingType;
+
+  @ApiProperty({ enum: ProjectType, required: false })
+  @IsOptional()
+  @IsEnum(ProjectType)
+  project_type?: ProjectType;
+
+  @ApiProperty({ enum: ProjectStatus, required: false })
+  @IsOptional()
+  @IsEnum(ProjectStatus)
+  project_status?: ProjectStatus;
+
+  @ApiProperty({ example: '2bhk', required: false })
+  @IsOptional()
+  config?: string;
+
+  @ApiProperty({ example: '123 Main St, City', required: false })
+  @IsOptional()
+  address?: string;
 
   @ApiProperty({ example: 3, required: false })
   @IsOptional()

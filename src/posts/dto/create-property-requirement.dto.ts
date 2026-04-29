@@ -68,4 +68,16 @@ export class CreatePropertyRequirementDto {
   @IsOptional()
   @IsArray()
   preferred_amenities?: string[];
+
+  @ApiProperty({ example: '2bhk', required: false })
+  @IsOptional()
+  config?: string;
+
+  @ApiProperty({ example: 'Residential', required: false })
+  @IsOptional()
+  project_type?: string;
+
+  @ApiProperty({ example: 'Ready to move', required: false })
+  @IsOptional()
+  project_status?: string;
 }
