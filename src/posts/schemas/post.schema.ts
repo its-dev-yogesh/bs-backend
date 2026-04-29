@@ -47,6 +47,14 @@ export class Post {
   @ApiProperty({ description: 'Free-form location text', required: false })
   location_text?: string;
 
+  @Prop()
+  @ApiProperty({
+    description: 'WhatsApp number for direct enquiries (with country code)',
+    required: false,
+    example: '919876543210',
+  })
+  whatsapp_number?: string;
+
   @Prop({ type: Number })
   @ApiProperty({ description: 'Latitude', required: false })
   latitude?: number;

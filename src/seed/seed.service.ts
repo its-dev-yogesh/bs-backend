@@ -41,14 +41,14 @@ const FIRST_NAMES = [
 ];
 
 const LOCATIONS = [
-  { text: 'HSR Layout, Bangalore', lat: 12.9116, lng: 77.6473 },
-  { text: 'Indiranagar, Bangalore', lat: 12.9784, lng: 77.6408 },
-  { text: 'Koramangala, Bangalore', lat: 12.9352, lng: 77.6245 },
-  { text: 'Whitefield, Bangalore', lat: 12.9698, lng: 77.7499 },
-  { text: 'BTM Layout, Bangalore', lat: 12.9166, lng: 77.6101 },
-  { text: 'Jayanagar, Bangalore', lat: 12.9250, lng: 77.5938 },
-  { text: 'Marathahalli, Bangalore', lat: 12.9591, lng: 77.6974 },
-  { text: 'Electronic City, Bangalore', lat: 12.8456, lng: 77.6603 },
+  { text: 'MP Nagar, Bhopal', lat: 23.2339, lng: 77.4343 },
+  { text: 'Arera Colony, Bhopal', lat: 23.2118, lng: 77.4306 },
+  { text: 'Kolar Road, Bhopal', lat: 23.1669, lng: 77.4296 },
+  { text: 'Shahpura, Bhopal', lat: 23.2025, lng: 77.4363 },
+  { text: 'Bairagarh, Bhopal', lat: 23.2874, lng: 77.3382 },
+  { text: 'Lalghati, Bhopal', lat: 23.2694, lng: 77.3599 },
+  { text: 'Ayodhya Bypass, Bhopal', lat: 23.2597, lng: 77.4635 },
+  { text: 'New Market, Bhopal', lat: 23.2307, lng: 77.4123 },
 ];
 
 const PROPERTY_TYPES = [

@@ -64,6 +64,10 @@ export class PropertyRequirement {
   @ApiProperty({ required: false })
   move_in_by?: Date;
 
+  @Prop({ type: [String], default: [] })
+  @ApiProperty({ type: [String], required: false })
+  preferred_amenities?: string[];
+
   @ApiProperty({ required: false })
   createdAt?: Date;
 }

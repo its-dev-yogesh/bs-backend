@@ -61,10 +61,13 @@ export class UserProfileService {
     updateUserProfileDto: Partial<CreateUserProfileDto>,
   ): Promise<UserProfile | null> {
     const updatedProfile = await this.userProfileModel
-      .findOneAndUpdate({ user_id }, updateUserProfileDto, { new: true })
+      .findOneAndUpdate(
+        { user_id },
+        { $set: { ...updateUserProfileDto, user_id } },
+        { new: true, upsert: true, runValidators: true },
+      )
       .exec();
 
-    // Clear cache
     await this.cacheManager.del(`user_profile_${user_id}`);
 
     return updatedProfile;

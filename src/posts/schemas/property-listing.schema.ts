@@ -80,6 +80,22 @@ export class PropertyListing {
   @ApiProperty({ required: false })
   available_from?: Date;
 
+  @Prop({ type: [String], default: [] })
+  @ApiProperty({ type: [String], required: false })
+  amenities?: string[];
+
+  @Prop()
+  @ApiProperty({ required: false })
+  floor_plan_url?: string;
+
+  @Prop()
+  @ApiProperty({ required: false })
+  contact_phone?: string;
+
+  @Prop()
+  @ApiProperty({ required: false })
+  whatsapp_number?: string;
+
   @ApiProperty({ required: false })
   createdAt?: Date;
 }

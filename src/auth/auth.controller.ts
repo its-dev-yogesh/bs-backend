@@ -6,6 +6,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthService, AuthResponse } from './auth.service';
+import { UserProfileService } from '../users/user-profile.service';
 import {
   RegisterDto,
   LoginDto,
@@ -21,7 +22,10 @@ import { User } from '../users/schemas/user.schema';
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userProfileService: UserProfileService,
+  ) {}
 
   @Post('register')
   @ApiOperation({ summary: 'Register a new user with phone (OTP via SMS)' })
@@ -120,15 +124,37 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('jwt-auth')
-  @ApiOperation({ summary: 'Get current authenticated user' })
+  @ApiOperation({
+    summary:
+      'Get current authenticated user (core fields + profile name, avatar, etc.)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Current user details',
     type: User,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  getCurrentUser(@CurrentUser() user: User): User {
-    return user;
+  async getCurrentUser(@CurrentUser() user: User): Promise<Record<string, unknown>> {
+    const profileUserId = String(user._id ?? user.id ?? '');
+    const profile = await this.userProfileService.findByUserId(profileUserId);
+    const plain = JSON.parse(
+      JSON.stringify(user),
+    ) as Record<string, unknown>;
+    return {
+      ...plain,
+      _id: profileUserId,
+      id: profileUserId,
+      name: profile?.full_name,
+      headline: profile?.headline,
+      bio: profile?.bio,
+      location: profile?.location,
+      avatarUrl: profile?.avatar_url,
+      avatarPositionY: profile?.avatar_position_y,
+      avatarZoom: profile?.avatar_zoom,
+      bannerUrl: profile?.banner_url,
+      bannerPositionY: profile?.banner_position_y,
+      bannerZoom: profile?.banner_zoom,
+    };
   }
 
   @Post('logout')

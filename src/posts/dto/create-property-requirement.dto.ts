@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsArray,
   IsDateString,
   IsEnum,
   IsInt,
@@ -62,4 +63,9 @@ export class CreatePropertyRequirementDto {
   @IsOptional()
   @IsDateString()
   move_in_by?: string;
+
+  @ApiProperty({ type: [String], required: false })
+  @IsOptional()
+  @IsArray()
+  preferred_amenities?: string[];
 }

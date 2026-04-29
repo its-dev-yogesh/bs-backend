@@ -29,8 +29,33 @@ export class SavedPostsService {
     await this.savedPostModel.deleteOne({ user_id, post_id }).exec();
   }
 
-  async listForUser(user_id: string): Promise<SavedPost[]> {
-    return this.savedPostModel.find({ user_id }).sort({ createdAt: -1 }).exec();
+  async listForUser(
+    user_id: string,
+  ): Promise<Array<{ post: Record<string, unknown> }>> {
+    const savedRows = await this.savedPostModel
+      .find({ user_id })
+      .sort({ createdAt: -1 })
+      .lean()
+      .exec();
+    if (savedRows.length === 0) {
+      return [];
+    }
+
+    const postIds = savedRows.map((row) => String(row.post_id));
+    const posts = await this.postModel
+      .find({ _id: { $in: postIds } })
+      .lean()
+      .exec();
+
+    const byId = new Map(
+      posts.map((p) => [String((p as { _id?: unknown })._id), p]),
+    );
+    const orderedPosts: Record<string, unknown>[] = [];
+    for (const id of postIds) {
+      const post = byId.get(id);
+      if (post) orderedPosts.push(post as unknown as Record<string, unknown>);
+    }
+    return orderedPosts.map((post) => ({ post }));
   }
 
   async isSaved(user_id: string, post_id: string): Promise<boolean> {

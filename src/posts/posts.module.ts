@@ -12,11 +12,9 @@ import {
 import { PostMedia, PostMediaSchema } from './schemas/post-media.schema';
 import { Reaction, ReactionSchema } from './schemas/reaction.schema';
 import { Comment, CommentSchema } from './schemas/comment.schema';
-import {
-  CommentReaction,
-  CommentReactionSchema,
-} from './schemas/comment-reaction.schema';
+import { CommentLike, CommentLikeSchema } from './schemas/comment-like.schema';
 import { SavedPost, SavedPostSchema } from './schemas/saved-post.schema';
+import { User, UserSchema } from '../users/schemas/user.schema';
 import { PostsService } from './posts.service';
 import { PostsController } from './posts.controller';
 import { ReactionsService } from './reactions.service';
@@ -38,8 +36,9 @@ import { AuthModule } from '../auth/auth.module';
       { name: PostMedia.name, schema: PostMediaSchema },
       { name: Reaction.name, schema: ReactionSchema },
       { name: Comment.name, schema: CommentSchema },
-      { name: CommentReaction.name, schema: CommentReactionSchema },
+      { name: CommentLike.name, schema: CommentLikeSchema },
       { name: SavedPost.name, schema: SavedPostSchema },
+      { name: User.name, schema: UserSchema },
     ]),
     AuthModule,
   ],
@@ -59,4 +58,4 @@ import { AuthModule } from '../auth/auth.module';
   ],
   exports: [PostsService, ReactionsService, CommentsService, SavedPostsService],
 })
-export class PostsModule {}
+export class PostsModule { }

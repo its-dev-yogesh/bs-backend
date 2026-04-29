@@ -42,6 +42,14 @@ export class UserProfile {
 
   @Prop()
   @ApiProperty({
+    description: 'Short professional headline',
+    example: 'Commercial broker · Mumbai',
+    required: false,
+  })
+  headline?: string;
+
+  @Prop()
+  @ApiProperty({
     description: 'Biography or bio description',
     example: 'Real estate agent with 10+ years of experience',
     required: false,
@@ -55,6 +63,53 @@ export class UserProfile {
     required: false,
   })
   avatar_url?: string;
+
+  @Prop({ type: Number })
+  @ApiProperty({
+    description: 'Vertical crop focus for avatar image (0 top, 100 bottom)',
+    example: 40,
+    required: false,
+  })
+  avatar_position_y?: number;
+
+  @Prop({ type: Number })
+  @ApiProperty({
+    description: 'Avatar zoom level for crop framing (1x-3x)',
+    example: 1.25,
+    required: false,
+  })
+  avatar_zoom?: number;
+
+  @Prop()
+  @ApiProperty({
+    description: 'Banner / cover image URL',
+    required: false,
+  })
+  banner_url?: string;
+
+  @Prop({ type: Number })
+  @ApiProperty({
+    description: 'Vertical crop focus for banner image (0 top, 100 bottom)',
+    example: 35,
+    required: false,
+  })
+  banner_position_y?: number;
+
+  @Prop({ type: Number })
+  @ApiProperty({
+    description: 'Banner zoom level for crop framing (1x-3x)',
+    example: 1.2,
+    required: false,
+  })
+  banner_zoom?: number;
+
+  @Prop()
+  @ApiProperty({
+    description: 'Banner theme preset key',
+    example: 'ocean',
+    required: false,
+  })
+  banner_theme?: string;
 
   @Prop()
   @ApiProperty({

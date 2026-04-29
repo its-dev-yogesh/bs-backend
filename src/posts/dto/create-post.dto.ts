@@ -5,6 +5,8 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsString,
+  Matches,
   ValidateNested,
 } from 'class-validator';
 import { PostStatus, PostVisibility } from '../schemas/post.schema';
@@ -23,6 +25,18 @@ export class BasePostFieldsDto {
   @ApiProperty({ example: 'HSR Layout, Bangalore', required: false })
   @IsOptional()
   location_text?: string;
+
+  @ApiProperty({
+    example: '919876543210',
+    required: false,
+    description: 'WhatsApp number with country code (digits only)',
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{8,15}$/, {
+    message: 'whatsapp_number must be 8-15 digits (include country code)',
+  })
+  whatsapp_number?: string;
 
   @ApiProperty({ example: 12.9116, required: false })
   @IsOptional()
@@ -71,6 +85,17 @@ export class UpdatePostDto {
   @ApiProperty({ required: false })
   @IsOptional()
   location_text?: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'WhatsApp number with country code (digits only)',
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{8,15}$/, {
+    message: 'whatsapp_number must be 8-15 digits (include country code)',
+  })
+  whatsapp_number?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

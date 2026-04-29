@@ -26,7 +26,7 @@ import {
   UpdatePostDto,
 } from './dto/create-post.dto';
 import { CreatePostMediaDto } from './dto/create-post-media.dto';
-import { PostType } from './schemas/post.schema';
+import { PostStatus, PostType } from './schemas/post.schema';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -69,17 +69,20 @@ export class PostsController {
   @ApiQuery({ name: 'user_id', required: false })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'skip', required: false, type: Number })
+  @ApiQuery({ name: 'status', required: false, enum: PostStatus })
   findAll(
     @Query('type') type?: PostType,
     @Query('user_id') user_id?: string,
     @Query('limit') limit?: string,
     @Query('skip') skip?: string,
+    @Query('status') status?: PostStatus,
   ) {
     return this.postsService.findAll({
       type,
       user_id,
       limit: limit ? Number(limit) : undefined,
       skip: skip ? Number(skip) : undefined,
+      status,
     });
   }
 
@@ -99,6 +102,30 @@ export class PostsController {
     @Body() dto: UpdatePostDto,
   ) {
     return this.postsService.update(id, user._id ?? user.id ?? '', dto);
+  }
+
+  @Put(':id/listing')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt-auth')
+  @ApiOperation({ summary: 'Update listing details for a post (author only)' })
+  updateListing(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+    @Body() dto: Record<string, unknown>,
+  ) {
+    return this.postsService.updateListingDetails(id, user._id ?? user.id ?? '', dto);
+  }
+
+  @Put(':id/requirement')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt-auth')
+  @ApiOperation({ summary: 'Update requirement details for a post (author only)' })
+  updateRequirement(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+    @Body() dto: Record<string, unknown>,
+  ) {
+    return this.postsService.updateRequirementDetails(id, user._id ?? user.id ?? '', dto);
   }
 
   @Put(':id/publish')

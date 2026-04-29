@@ -43,6 +43,7 @@ export interface PostWithDetails {
 
 @Injectable()
 export class PostsService {
+  private readonly maxPostsPerDay = 20;
   constructor(
     @InjectModel(Post.name) private postModel: Model<Post>,
     @InjectModel(PropertyListing.name)
@@ -64,6 +65,8 @@ export class PostsService {
     if (user_type !== UserType.AGENT) {
       throw new ForbiddenException('Only agents can post listings');
     }
+    await this.enforceDailyPostLimit(user_id);
+    await this.checkDuplicateListing(dto);
 
     const post = await this.createBasePost(user_id, PostType.LISTING, dto);
     const listing = await this.listingModel.create({
@@ -81,6 +84,7 @@ export class PostsService {
     _user_type: UserType,
     dto: CreateRequirementPostDto,
   ): Promise<PostWithDetails> {
+    await this.enforceDailyPostLimit(user_id);
     const post = await this.createBasePost(user_id, PostType.REQUIREMENT, dto);
     const requirement = await this.requirementModel.create({
       post_id: post._id,
@@ -152,11 +156,49 @@ export class PostsService {
       title: fields.title,
       description: fields.description,
       location_text: fields.location_text,
+      whatsapp_number: fields.whatsapp_number,
       latitude: fields.latitude,
       longitude: fields.longitude,
       visibility: fields.visibility,
       status: fields.status,
     });
+  }
+
+  private async enforceDailyPostLimit(user_id: string) {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const count = await this.postModel
+      .countDocuments({ user_id, createdAt: { $gte: since } })
+      .exec();
+    if (count >= this.maxPostsPerDay) {
+      throw new BadRequestException('Daily posting limit reached');
+    }
+  }
+
+  private async checkDuplicateListing(dto: CreateListingPostDto) {
+    const recentPosts = await this.postModel
+      .find({
+        type: PostType.LISTING,
+        title: dto.title,
+        location_text: dto.location_text,
+        createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+      })
+      .select('_id')
+      .limit(5)
+      .exec();
+    if (!recentPosts.length) return;
+
+    const postIds = recentPosts.map((p) => p._id).filter(Boolean) as string[];
+    const existingSamePrice = await this.listingModel
+      .findOne({
+        post_id: { $in: postIds },
+        price: dto.listing.price,
+      })
+      .exec();
+    if (existingSamePrice) {
+      throw new BadRequestException(
+        'Potential duplicate listing detected; please review your details',
+      );
+    }
   }
 
   async findById(id: string): Promise<PostWithDetails> {
@@ -186,22 +228,88 @@ export class PostsService {
     return { post, listing, requirement, media };
   }
 
+  async updateListingDetails(
+    postId: string,
+    userId: string,
+    dto: Partial<PropertyListing>,
+  ) {
+    const post = await this.postModel.findById(postId).exec();
+    if (!post || post.user_id !== userId) {
+      throw new BadRequestException("Cannot update another user's listing");
+    }
+    if (post.type !== PostType.LISTING) {
+      throw new BadRequestException('Post is not a listing');
+    }
+    await this.listingModel.updateOne({ post_id: postId }, { $set: dto }).exec();
+    return this.findById(postId);
+  }
+
+  async updateRequirementDetails(
+    postId: string,
+    userId: string,
+    dto: Partial<PropertyRequirement>,
+  ) {
+    const post = await this.postModel.findById(postId).exec();
+    if (!post || post.user_id !== userId) {
+      throw new BadRequestException("Cannot update another user's requirement");
+    }
+    if (post.type !== PostType.REQUIREMENT) {
+      throw new BadRequestException('Post is not a requirement');
+    }
+    await this.requirementModel
+      .updateOne({ post_id: postId }, { $set: dto })
+      .exec();
+    return this.findById(postId);
+  }
+
   async findAll(filter: {
     type?: PostType;
     user_id?: string;
     limit?: number;
     skip?: number;
-  }): Promise<Post[]> {
+    status?: PostStatus;
+  }): Promise<
+    Array<Record<string, unknown> & { _id: string; media_urls: string[] }>
+  > {
     const query: Record<string, unknown> = {};
     if (filter.type) query.type = filter.type;
     if (filter.user_id) query.user_id = filter.user_id;
+    if (filter.status !== undefined) query.status = filter.status;
 
-    return this.postModel
+    const posts = await this.postModel
       .find(query)
       .sort({ createdAt: -1 })
       .skip(filter.skip ?? 0)
       .limit(filter.limit ?? 20)
+      .lean()
       .exec();
+
+    if (posts.length === 0) {
+      return [];
+    }
+
+    const postIds = posts.map((p) => String(p._id));
+    const mediaDocs = await this.mediaModel
+      .find({ post_id: { $in: postIds } })
+      .sort({ post_id: 1, order_index: 1 })
+      .lean()
+      .exec();
+
+    const urlsByPost = new Map<string, string[]>();
+    for (const m of mediaDocs) {
+      const pid = String(m.post_id);
+      const list = urlsByPost.get(pid) ?? [];
+      list.push(m.url);
+      urlsByPost.set(pid, list);
+    }
+
+    return posts.map((p) => ({
+      ...p,
+      _id: String(p._id),
+      media_urls: urlsByPost.get(String(p._id)) ?? [],
+    })) as Array<
+      Record<string, unknown> & { _id: string; media_urls: string[] }
+    >;
   }
 
   async findActiveByType(type: PostType | PostType[]): Promise<Post[]> {

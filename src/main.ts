@@ -6,6 +6,11 @@ import { setupProductionSwagger } from './config/swagger.config';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  app.setGlobalPrefix('api');
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  });
 
   // Setup Swagger with production authentication
   setupProductionSwagger(app, configService);

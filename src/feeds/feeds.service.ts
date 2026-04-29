@@ -16,6 +16,7 @@ import { PropertyRequirement } from '../posts/schemas/property-requirement.schem
 import { PostMedia } from '../posts/schemas/post-media.schema';
 import { ReactionType } from '../posts/schemas/reaction.schema';
 import { UserType } from '../users/schemas/user.schema';
+import { ConnectionsService } from '../connections/connections.service';
 
 export interface FeedItemAuthor {
   user_id: string;
@@ -37,10 +38,14 @@ export interface FeedItem {
   comments_count: number;
   saves_count: number;
   inquiries_count: number;
-  user_reaction: ReactionType | null;
-  is_saved: boolean;
-  is_following_author: boolean;
-  is_inquired: boolean;
+  /** Viewer's reaction type on this post, if any */
+  user_reaction?: string | null;
+  /** Whether the viewer saved this post */
+  is_saved?: boolean;
+  /** Viewer ↔ post author connection (for Follow chip on cards) */
+  author_connected?: boolean;
+  author_pending_outgoing?: boolean;
+  author_pending_incoming?: boolean;
 }
 
 @Injectable()
@@ -51,11 +56,8 @@ export class FeedsService {
     private readonly reactionsService: ReactionsService,
     private readonly commentsService: CommentsService,
     private readonly savedPostsService: SavedPostsService,
-    private readonly followsService: FollowsService,
-    private readonly inquiriesService: InquiriesService,
-    private readonly usersService: UsersService,
-    private readonly userProfileService: UserProfileService,
-  ) {}
+    private readonly connectionsService: ConnectionsService,
+  ) { }
 
   async getFeed(
     user_id: string,
@@ -71,8 +73,10 @@ export class FeedsService {
       .limit(limit)
       .exec();
 
-    const built = await Promise.all(
-      entries.map((entry) => this.buildItem(entry.post_id, entry.score)),
+    const items = await Promise.all(
+      entries.map((entry) =>
+        this.buildItem(entry.post_id, entry.score, user_id),
+      ),
     );
 
     const items = built.filter((item): item is FeedItem => item !== null);
@@ -108,12 +112,12 @@ export class FeedsService {
       const profile = profilesByUserId.get(authorId);
       const feedAuthor: FeedItemAuthor | null = author
         ? {
-            user_id: authorId,
-            username: author.username,
-            full_name: profile?.full_name,
-            avatar_url: profile?.avatar_url,
-            type: author.type,
-          }
+          user_id: authorId,
+          username: author.username,
+          full_name: profile?.full_name,
+          avatar_url: profile?.avatar_url,
+          type: author.type,
+        }
         : null;
 
       return {
@@ -164,17 +168,38 @@ export class FeedsService {
   private async buildItem(
     post_id: string,
     score: number,
+    viewer_user_id: string,
   ): Promise<FeedItem | null> {
     const details = await this.postsService.findByIdSafe(post_id);
     if (!details) {
       return null;
     }
 
-    const [reactionCounts, comments_count, saves_count] = await Promise.all([
+    const author_id = String(details.post.user_id ?? '');
+
+    const [
+      reactionCounts,
+      comments_count,
+      saves_on_post,
+      userReactionType,
+      isSavedByViewer,
+      rel,
+    ] = await Promise.all([
       this.reactionsService.countsByPost(post_id),
       this.commentsService.countByPost(post_id),
       this.savedPostsService.countByPost(post_id),
+      this.reactionsService.getUserReactionType(viewer_user_id, post_id),
+      this.savedPostsService.isSaved(viewer_user_id, post_id),
+      author_id && author_id !== viewer_user_id
+        ? this.connectionsService.getRelationship(viewer_user_id, author_id)
+        : Promise.resolve({
+          isConnected: false,
+          pendingOutgoing: false,
+          pendingIncoming: false,
+        }),
     ]);
+
+    const likesTotal = reactionCounts.like + reactionCounts.interested;
 
     return {
       post_id,
@@ -183,15 +208,15 @@ export class FeedsService {
       listing: details.listing ?? null,
       requirement: details.requirement ?? null,
       media: details.media,
-      author: null,
-      likes_count: reactionCounts.like,
+      likes_count: likesTotal,
       comments_count,
-      saves_count,
+      saves_count: saves_on_post,
       inquiries_count: 0,
-      user_reaction: null,
-      is_saved: false,
-      is_following_author: false,
-      is_inquired: false,
+      user_reaction: userReactionType,
+      is_saved: isSavedByViewer,
+      author_connected: rel.isConnected,
+      author_pending_outgoing: rel.pendingOutgoing,
+      author_pending_incoming: rel.pendingIncoming,
     };
   }
 

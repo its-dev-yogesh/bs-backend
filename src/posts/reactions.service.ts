@@ -45,6 +45,19 @@ export class ReactionsService {
     await this.reactionModel.deleteOne({ user_id, post_id }).exec();
   }
 
+  /** Current user's reaction type on this post, if any. */
+  async getUserReactionType(
+    user_id: string,
+    post_id: string,
+  ): Promise<ReactionType | null> {
+    const doc = await this.reactionModel
+      .findOne({ user_id, post_id })
+      .select('type')
+      .lean()
+      .exec();
+    return doc?.type ?? null;
+  }
+
   async findByPost(post_id: string): Promise<Reaction[]> {
     return this.reactionModel.find({ post_id }).sort({ createdAt: -1 }).exec();
   }
