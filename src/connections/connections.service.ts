@@ -10,6 +10,8 @@ import {
   ConnectionRequest,
   ConnectionRequestStatus,
 } from './schemas/connection-request.schema';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/schemas/notification.schema';
 
 export type ViewerRelationship = {
   isConnected: boolean;
@@ -25,6 +27,7 @@ export class ConnectionsService {
     @InjectModel(ConnectionRequest.name)
     private readonly requestModel: Model<ConnectionRequest>,
     @InjectModel(User.name) private readonly userModel: Model<User>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /** Number of accepted connections (edges) for this user. */
@@ -155,13 +158,44 @@ export class ConnectionsService {
       throw new BadRequestException('Cannot send request to self');
     }
 
+    /** Look at both directions — a pending request from the other side means
+     *  this is really a "Follow Back" and should accept rather than open a
+     *  duplicate edge that leaves both users stuck in PENDING. */
     const existing = await this.requestModel
-      .findOne({ from_user_id: fromUserId, to_user_id: toUserId })
+      .findOne({
+        $or: [
+          { from_user_id: fromUserId, to_user_id: toUserId },
+          { from_user_id: toUserId, to_user_id: fromUserId },
+        ],
+      })
       .exec();
     if (existing) {
+      if (
+        existing.status === ConnectionRequestStatus.PENDING &&
+        existing.from_user_id === toUserId &&
+        existing.to_user_id === fromUserId
+      ) {
+        existing.status = ConnectionRequestStatus.ACCEPTED;
+        await existing.save();
+        await this.notificationsService.create(
+          toUserId,
+          NotificationType.CONNECTION_REQUEST,
+          fromUserId,
+          '/network',
+        );
+        return { data: existing };
+      }
       if (existing.status === ConnectionRequestStatus.DECLINED) {
         existing.status = ConnectionRequestStatus.PENDING;
+        existing.from_user_id = fromUserId;
+        existing.to_user_id = toUserId;
         await existing.save();
+        await this.notificationsService.create(
+          toUserId,
+          NotificationType.CONNECTION_REQUEST,
+          fromUserId,
+          '/network',
+        );
         return { data: existing };
       }
       return { data: existing };
@@ -172,6 +206,12 @@ export class ConnectionsService {
       to_user_id: toUserId,
       status: ConnectionRequestStatus.PENDING,
     });
+    await this.notificationsService.create(
+      toUserId,
+      NotificationType.CONNECTION_REQUEST,
+      fromUserId,
+      '/network',
+    );
     return { data: request };
   }
 
@@ -184,7 +224,32 @@ export class ConnectionsService {
 
     request.status = ConnectionRequestStatus.ACCEPTED;
     await request.save();
+    /** Tell the original requester (from_user_id) their request was accepted. */
+    await this.notificationsService.create(
+      request.from_user_id,
+      NotificationType.CONNECTION_REQUEST,
+      currentUserId,
+      '/network',
+    );
     return { data: request };
+  }
+
+  async removeConnection(currentUserId: string, otherUserId: string) {
+    if (!currentUserId || !otherUserId) {
+      throw new BadRequestException('Missing user id');
+    }
+    if (currentUserId === otherUserId) {
+      throw new BadRequestException('Cannot disconnect from self');
+    }
+    const result = await this.requestModel
+      .deleteMany({
+        $or: [
+          { from_user_id: currentUserId, to_user_id: otherUserId },
+          { from_user_id: otherUserId, to_user_id: currentUserId },
+        ],
+      })
+      .exec();
+    return { ok: true, removed: result.deletedCount ?? 0 };
   }
 
   async declineRequest(currentUserId: string, requestId: string) {

@@ -35,6 +35,21 @@ export class UserProfileService {
     return savedProfile;
   }
 
+  async findByUserIds(userIds: string[]): Promise<UserProfile[]> {
+    if (userIds.length === 0) return [];
+    return this.userProfileModel.find({ user_id: { $in: userIds } }).exec();
+  }
+
+  async searchByName(q: string, limit: number): Promise<UserProfile[]> {
+    const trimmed = q.trim();
+    if (!trimmed) return [];
+    const safe = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return this.userProfileModel
+      .find({ full_name: { $regex: safe, $options: 'i' } })
+      .limit(limit)
+      .exec();
+  }
+
   async findByUserId(user_id: string): Promise<UserProfile | null> {
     const cacheKey = `user_profile_${user_id}`;
 

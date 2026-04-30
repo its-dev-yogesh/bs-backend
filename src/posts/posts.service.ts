@@ -17,6 +17,9 @@ import {
 import { PropertyListing } from './schemas/property-listing.schema';
 import { PropertyRequirement } from './schemas/property-requirement.schema';
 import { PostMedia } from './schemas/post-media.schema';
+import { Reaction, ReactionType } from './schemas/reaction.schema';
+import { SavedPost } from './schemas/saved-post.schema';
+import { Comment } from './schemas/comment.schema';
 import {
   BasePostFieldsDto,
   CreateListingPostDto,
@@ -51,6 +54,9 @@ export class PostsService {
     @InjectModel(PropertyRequirement.name)
     private requirementModel: Model<PropertyRequirement>,
     @InjectModel(PostMedia.name) private mediaModel: Model<PostMedia>,
+    @InjectModel(Reaction.name) private reactionModel: Model<Reaction>,
+    @InjectModel(SavedPost.name) private savedPostModel: Model<SavedPost>,
+    @InjectModel(Comment.name) private commentModel: Model<Comment>,
     @InjectQueue(QUEUE_POST_FANOUT)
     private readonly fanoutQueue: Queue<FanoutPostJobData>,
     @InjectQueue(QUEUE_MEDIA_PROCESSING)
@@ -268,8 +274,19 @@ export class PostsService {
     limit?: number;
     skip?: number;
     status?: PostStatus;
+    viewer_user_id?: string;
   }): Promise<
-    Array<Record<string, unknown> & { _id: string; media_urls: string[] }>
+    Array<
+      Record<string, unknown> & {
+        _id: string;
+        media_urls: string[];
+        likes_count: number;
+        saves_count: number;
+        comments_count: number;
+        user_reaction: ReactionType | null;
+        is_saved: boolean;
+      }
+    >
   > {
     const query: Record<string, unknown> = {};
     if (filter.type) query.type = filter.type;
@@ -289,11 +306,48 @@ export class PostsService {
     }
 
     const postIds = posts.map((p) => String(p._id));
-    const mediaDocs = await this.mediaModel
-      .find({ post_id: { $in: postIds } })
-      .sort({ post_id: 1, order_index: 1 })
-      .lean()
-      .exec();
+    const viewerId = filter.viewer_user_id;
+
+    const [mediaDocs, likeAgg, saveAgg, commentAgg, viewerReactions, viewerSaves] =
+      await Promise.all([
+        this.mediaModel
+          .find({ post_id: { $in: postIds } })
+          .sort({ post_id: 1, order_index: 1 })
+          .lean()
+          .exec(),
+        this.reactionModel
+          .aggregate<{ _id: string; count: number }>([
+            { $match: { post_id: { $in: postIds }, type: ReactionType.LIKE } },
+            { $group: { _id: '$post_id', count: { $sum: 1 } } },
+          ])
+          .exec(),
+        this.savedPostModel
+          .aggregate<{ _id: string; count: number }>([
+            { $match: { post_id: { $in: postIds } } },
+            { $group: { _id: '$post_id', count: { $sum: 1 } } },
+          ])
+          .exec(),
+        this.commentModel
+          .aggregate<{ _id: string; count: number }>([
+            { $match: { post_id: { $in: postIds } } },
+            { $group: { _id: '$post_id', count: { $sum: 1 } } },
+          ])
+          .exec(),
+        viewerId
+          ? this.reactionModel
+              .find({ user_id: viewerId, post_id: { $in: postIds } })
+              .select('post_id type')
+              .lean()
+              .exec()
+          : Promise.resolve([] as Array<{ post_id: string; type: ReactionType }>),
+        viewerId
+          ? this.savedPostModel
+              .find({ user_id: viewerId, post_id: { $in: postIds } })
+              .select('post_id')
+              .lean()
+              .exec()
+          : Promise.resolve([] as Array<{ post_id: string }>),
+      ]);
 
     const urlsByPost = new Map<string, string[]>();
     for (const m of mediaDocs) {
@@ -303,12 +357,40 @@ export class PostsService {
       urlsByPost.set(pid, list);
     }
 
-    return posts.map((p) => ({
-      ...p,
-      _id: String(p._id),
-      media_urls: urlsByPost.get(String(p._id)) ?? [],
-    })) as Array<
-      Record<string, unknown> & { _id: string; media_urls: string[] }
+    const likesByPost = new Map(likeAgg.map((r) => [String(r._id), r.count]));
+    const savesByPost = new Map(saveAgg.map((r) => [String(r._id), r.count]));
+    const commentsByPost = new Map(
+      commentAgg.map((r) => [String(r._id), r.count]),
+    );
+    const viewerReactionByPost = new Map(
+      viewerReactions.map((r) => [String(r.post_id), r.type]),
+    );
+    const viewerSavedSet = new Set(
+      viewerSaves.map((r) => String(r.post_id)),
+    );
+
+    return posts.map((p) => {
+      const pid = String(p._id);
+      return {
+        ...p,
+        _id: pid,
+        media_urls: urlsByPost.get(pid) ?? [],
+        likes_count: likesByPost.get(pid) ?? 0,
+        saves_count: savesByPost.get(pid) ?? 0,
+        comments_count: commentsByPost.get(pid) ?? 0,
+        user_reaction: viewerReactionByPost.get(pid) ?? null,
+        is_saved: viewerSavedSet.has(pid),
+      };
+    }) as Array<
+      Record<string, unknown> & {
+        _id: string;
+        media_urls: string[];
+        likes_count: number;
+        saves_count: number;
+        comments_count: number;
+        user_reaction: ReactionType | null;
+        is_saved: boolean;
+      }
     >;
   }
 

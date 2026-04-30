@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -30,5 +38,10 @@ export class MessagesController {
     @Body() dto: SendMessageDto,
   ) {
     return this.messagesService.send(user._id ?? '', threadId, dto);
+  }
+
+  @Delete('threads/:id')
+  deleteThread(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.messagesService.deleteThread(user._id ?? user.id ?? '', id);
   }
 }

@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -16,7 +17,9 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../users/schemas/user.schema';
 import { PostsService } from './posts.service';
@@ -64,6 +67,7 @@ export class PostsController {
   }
 
   @Get()
+  @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({ summary: 'List posts' })
   @ApiQuery({ name: 'type', required: false, enum: PostType })
   @ApiQuery({ name: 'user_id', required: false })
@@ -71,18 +75,21 @@ export class PostsController {
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, enum: PostStatus })
   findAll(
+    @Req() req: Request & { user?: User },
     @Query('type') type?: PostType,
     @Query('user_id') user_id?: string,
     @Query('limit') limit?: string,
     @Query('skip') skip?: string,
     @Query('status') status?: PostStatus,
   ) {
+    const viewerId = req.user?._id ?? req.user?.id;
     return this.postsService.findAll({
       type,
       user_id,
       limit: limit ? Number(limit) : undefined,
       skip: skip ? Number(skip) : undefined,
       status,
+      viewer_user_id: viewerId ? String(viewerId) : undefined,
     });
   }
 

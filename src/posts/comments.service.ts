@@ -11,6 +11,11 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { CommentLike } from './schemas/comment-like.schema';
 import { User } from '../users/schemas/user.schema';
 import { ReactionsService } from './reactions.service';
+import { LeadsService } from '../leads/leads.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/schemas/notification.schema';
+
+const MENTION_RE = /@([a-zA-Z0-9_]{3,30})/g;
 
 export type EnrichedComment = Record<string, unknown> & {
   _id: string;
@@ -37,6 +42,8 @@ export class CommentsService {
     @InjectModel(CommentLike.name)
     private readonly commentLikeModel: Model<CommentLike>,
     private readonly reactionsService: ReactionsService,
+    private readonly leadsService: LeadsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(
@@ -44,8 +51,8 @@ export class CommentsService {
     post_id: string,
     dto: CreateCommentDto,
   ): Promise<Comment> {
-    const postExists = await this.postModel.exists({ _id: post_id });
-    if (!postExists) {
+    const post = await this.postModel.findById(post_id).exec();
+    if (!post) {
       throw new NotFoundException('Post not found');
     }
 
@@ -58,12 +65,50 @@ export class CommentsService {
       }
     }
 
-    return this.commentModel.create({
+    const created = await this.commentModel.create({
       post_id,
       user_id,
       parent_id: dto.parent_id ?? null,
       content: dto.content,
     });
+    const link = `/listings/${post_id}`;
+    if (post.user_id && post.user_id !== user_id) {
+      await this.leadsService.upsertEngagementLead(post.user_id, user_id, post_id);
+      await this.notificationsService.create(
+        post.user_id,
+        NotificationType.COMMENT,
+        user_id,
+        link,
+      );
+    }
+    /** Mentions: @username tokens in the comment body — notify each mentioned
+     *  user once, skipping author and the post owner (already covered above). */
+    const usernames = Array.from(
+      new Set(
+        Array.from(dto.content.matchAll(MENTION_RE), (m) => m[1].toLowerCase()),
+      ),
+    );
+    if (usernames.length > 0) {
+      const mentioned = await this.userModel
+        .find({ username: { $in: usernames } })
+        .select('_id')
+        .exec();
+      const skip = new Set([user_id, post.user_id ?? '']);
+      await Promise.all(
+        mentioned
+          .map((u) => String(u._id))
+          .filter((uid) => uid && !skip.has(uid))
+          .map((uid) =>
+            this.notificationsService.create(
+              uid,
+              NotificationType.MENTION,
+              user_id,
+              link,
+            ),
+          ),
+      );
+    }
+    return created;
   }
 
   async findByPost(post_id: string): Promise<Comment[]> {

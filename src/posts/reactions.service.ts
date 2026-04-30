@@ -3,6 +3,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Reaction, ReactionType } from './schemas/reaction.schema';
 import { Post } from './schemas/post.schema';
+import { LeadsService } from '../leads/leads.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/schemas/notification.schema';
 
 export interface ReactionCounts {
   like: number;
@@ -14,6 +17,8 @@ export class ReactionsService {
   constructor(
     @InjectModel(Reaction.name) private reactionModel: Model<Reaction>,
     @InjectModel(Post.name) private postModel: Model<Post>,
+    private readonly leadsService: LeadsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -26,11 +31,14 @@ export class ReactionsService {
     post_id: string,
     type: ReactionType,
   ): Promise<Reaction> {
-    const post = await this.postModel.exists({ _id: post_id });
+    const post = await this.postModel.findById(post_id).exec();
     if (!post) {
       throw new NotFoundException('Post not found');
     }
 
+    const existing = await this.reactionModel
+      .findOne({ user_id, post_id })
+      .exec();
     const updated = await this.reactionModel
       .findOneAndUpdate(
         { user_id, post_id },
@@ -38,6 +46,20 @@ export class ReactionsService {
         { upsert: true, new: true },
       )
       .exec();
+    /** Reactions on someone else's post imply intent — surface as a lead and
+     *  notify the author the first time only (re-clicking like → unlike → like
+     *  shouldn't spam them). */
+    if (post.user_id && post.user_id !== user_id) {
+      await this.leadsService.upsertEngagementLead(post.user_id, user_id, post_id);
+      if (!existing) {
+        await this.notificationsService.create(
+          post.user_id,
+          NotificationType.POST_LIKE,
+          user_id,
+          `/listings/${post_id}`,
+        );
+      }
+    }
     return updated;
   }
 

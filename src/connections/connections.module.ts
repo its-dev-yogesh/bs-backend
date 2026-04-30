@@ -7,6 +7,7 @@ import {
   ConnectionRequest,
   ConnectionRequestSchema,
 } from './schemas/connection-request.schema';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import {
       { name: ConnectionRequest.name, schema: ConnectionRequestSchema },
       { name: User.name, schema: UserSchema },
     ]),
+    NotificationsModule,
   ],
   controllers: [ConnectionsController],
   providers: [ConnectionsService],

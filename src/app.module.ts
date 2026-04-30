@@ -23,6 +23,7 @@ import { SearchModule } from './search/search.module';
 import { LeadsModule } from './leads/leads.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { MonetizationModule } from './monetization/monetization.module';
+import { StoriesModule } from './stories/stories.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { MonetizationModule } from './monetization/monetization.module';
     LeadsModule,
     AnalyticsModule,
     MonetizationModule,
+    StoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -6,6 +6,7 @@ import {
   Notification,
   NotificationType,
 } from './schemas/notification.schema';
+import { NotificationsGateway } from './notifications.gateway';
 
 @Injectable()
 export class NotificationsService {
@@ -13,6 +14,7 @@ export class NotificationsService {
     @InjectModel(Notification.name)
     private readonly notificationModel: Model<Notification>,
     @InjectModel(User.name) private readonly userModel: Model<User>,
+    private readonly gateway: NotificationsGateway,
   ) {}
 
   async create(
@@ -21,13 +23,30 @@ export class NotificationsService {
     actorId: string,
     link?: string,
   ) {
-    return this.notificationModel.create({
+    const created = await this.notificationModel.create({
       user_id: userId,
       type,
       actor_id: actorId,
       link,
       read: false,
     });
+    const actor = await this.userModel
+      .findOne({ _id: actorId })
+      .select('_id username')
+      .exec();
+    this.gateway.emitToUser(userId, 'notification:new', {
+      id: created._id,
+      type: created.type,
+      actor: {
+        id: actor?._id ?? actorId,
+        name: actor?.username ?? 'Broker',
+        avatarUrl: undefined,
+      },
+      read: created.read,
+      link: created.link,
+      createdAt: created.createdAt,
+    });
+    return created;
   }
 
   async list(userId: string) {

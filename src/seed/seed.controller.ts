@@ -15,6 +15,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { UserRole } from '../users/schemas/user.schema';
 import { SeedService } from './seed.service';
 
 @Injectable()
@@ -46,6 +47,13 @@ class SeedAllDto {
 
 class DevLoginDto {
   identifier: string;
+}
+
+class SeedAdminDto {
+  phone: string;
+  username?: string;
+  email?: string;
+  role?: 'admin' | 'super_admin';
 }
 
 @ApiTags('Seed')
@@ -95,5 +103,19 @@ export class SeedController {
   })
   devLogin(@Body() body: DevLoginDto) {
     return this.seedService.devLogin(body.identifier);
+  }
+
+  @Post('admin')
+  @ApiOperation({
+    summary:
+      'Create or promote a user to admin (or super_admin). Idempotent on phone.',
+  })
+  seedAdmin(@Body() body: SeedAdminDto) {
+    return this.seedService.seedAdmin({
+      phone: body.phone,
+      username: body.username,
+      email: body.email,
+      role: body.role === 'super_admin' ? UserRole.SUPER_ADMIN : UserRole.ADMIN,
+    });
   }
 }

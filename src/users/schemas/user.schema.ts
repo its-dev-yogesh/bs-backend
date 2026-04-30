@@ -16,6 +16,12 @@ export enum UserStatus {
   DELETED = 'deleted',
 }
 
+export enum UserRole {
+  USER = 'user',
+  ADMIN = 'admin',
+  SUPER_ADMIN = 'super_admin',
+}
+
 @Schema({ timestamps: true })
 export class User {
   @ApiProperty({
@@ -81,6 +87,14 @@ export class User {
     example: UserStatus.ACTIVE,
   })
   status: UserStatus;
+
+  @Prop({ enum: UserRole, default: UserRole.USER, index: true })
+  @ApiProperty({
+    description: 'Authorization role',
+    enum: UserRole,
+    example: UserRole.USER,
+  })
+  role: UserRole;
 
   @ApiProperty({
     description: 'Account creation timestamp',

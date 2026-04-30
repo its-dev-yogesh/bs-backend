@@ -6,6 +6,7 @@ import type { Cache } from 'cache-manager';
 import * as bcrypt from 'bcrypt';
 import { User } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
+import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -65,6 +66,23 @@ export class UsersService {
     await this.cacheManager.set(cacheKey, users, 300000);
 
     return users.map((user) => this.sanitizeUser(user));
+  }
+
+  async searchByUsername(q: string, limit: number): Promise<User[]> {
+    const trimmed = q.trim();
+    if (!trimmed) return [];
+    const safe = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const users = await this.userModel
+      .find({ username: { $regex: safe, $options: 'i' } })
+      .limit(limit)
+      .exec();
+    return users.map((u) => this.sanitizeUser(u));
+  }
+
+  async findManyByIds(ids: string[]): Promise<User[]> {
+    if (ids.length === 0) return [];
+    const users = await this.userModel.find({ _id: { $in: ids } }).exec();
+    return users.map((u) => this.sanitizeUser(u));
   }
 
   async findById(id: string): Promise<User | null> {
@@ -190,6 +208,21 @@ export class UsersService {
     // Clear related caches
     await this.cacheManager.del(`user_${id}`);
     await this.cacheManager.del('all_users');
+  }
+
+  async adminUpdate(id: string, dto: AdminUpdateUserDto): Promise<User | null> {
+    const update: Record<string, unknown> = {};
+    if (dto.role !== undefined) update.role = dto.role;
+    if (dto.status !== undefined) update.status = dto.status;
+    if (Object.keys(update).length === 0) {
+      return this.findById(id);
+    }
+    const updated = await this.userModel
+      .findByIdAndUpdate(id, update, { new: true })
+      .exec();
+    await this.cacheManager.del(`user_${id}`);
+    await this.cacheManager.del('all_users');
+    return updated ? this.sanitizeUser(updated) : null;
   }
 
   verifyPassword(password: string, passwordHash: string): Promise<boolean> {

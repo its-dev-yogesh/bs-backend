@@ -48,6 +48,11 @@ export class VerificationService {
     return { data: items };
   }
 
+  async listAll() {
+    const items = await this.kycModel.find().sort({ createdAt: -1 }).exec();
+    return { data: items };
+  }
+
   async review(id: string, dto: ReviewKycDto) {
     const item = await this.kycModel.findById(id).exec();
     if (!item) throw new NotFoundException('KYC request not found');

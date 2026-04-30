@@ -7,6 +7,7 @@ export interface JwtPayload {
   username: string;
   email: string;
   type: string; // 'user' or 'agent'
+  role: string; // 'user' | 'admin' | 'super_admin'
   iat?: number;
   exp?: number;
 }
@@ -102,6 +103,7 @@ export class AuthTokenService {
       username: payload.username,
       email: payload.email,
       type: payload.type,
+      role: payload.role,
     };
 
     return {

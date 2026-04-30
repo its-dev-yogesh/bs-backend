@@ -6,7 +6,9 @@ import { Report, ReportStatus } from './schemas/report.schema';
 
 @Injectable()
 export class ModerationService {
-  constructor(@InjectModel(Report.name) private readonly reportModel: Model<Report>) {}
+  constructor(
+    @InjectModel(Report.name) private readonly reportModel: Model<Report>,
+  ) {}
 
   async create(userId: string, dto: CreateReportDto) {
     const report = await this.reportModel.create({
@@ -23,6 +25,14 @@ export class ModerationService {
     const reports = await this.reportModel
       .find({ status: ReportStatus.OPEN })
       .sort({ createdAt: 1 })
+      .exec();
+    return { data: reports };
+  }
+
+  async listAll() {
+    const reports = await this.reportModel
+      .find()
+      .sort({ createdAt: -1 })
       .exec();
     return { data: reports };
   }

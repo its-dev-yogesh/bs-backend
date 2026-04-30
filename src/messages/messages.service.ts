@@ -14,6 +14,8 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import { Message } from './schemas/message.schema';
 import { MessageThread } from './schemas/message-thread.schema';
+import { LeadsService } from '../leads/leads.service';
+import { Post } from '../posts/schemas/post.schema';
 
 @Injectable()
 export class MessagesService {
@@ -23,7 +25,9 @@ export class MessagesService {
     private readonly threadModel: Model<MessageThread>,
     @InjectModel(Message.name) private readonly messageModel: Model<Message>,
     @InjectModel(User.name) private readonly userModel: Model<User>,
+    @InjectModel(Post.name) private readonly postModel: Model<Post>,
     private readonly notificationsService: NotificationsService,
+    private readonly leadsService: LeadsService,
   ) {}
 
   async listThreads(currentUserId: string) {
@@ -95,10 +99,23 @@ export class MessagesService {
       if (!dto.targetUserId) {
         throw new BadRequestException('targetUserId required for new thread');
       }
-      thread = await this.threadModel.create({
-        _id: threadId,
-        participant_ids: [currentUserId, dto.targetUserId],
-      });
+      /** Reuse the existing 1-on-1 thread between these two users when one
+       *  exists — the client always generates a fresh UUID, so without this
+       *  every DM would spawn a duplicate conversation. */
+      const existing = await this.threadModel
+        .findOne({
+          participant_ids: {
+            $size: 2,
+            $all: [currentUserId, dto.targetUserId],
+          },
+        })
+        .exec();
+      thread =
+        existing ??
+        (await this.threadModel.create({
+          _id: threadId,
+          participant_ids: [currentUserId, dto.targetUserId],
+        }));
     }
     if (!thread.participant_ids.includes(currentUserId)) {
       throw new BadRequestException('Not a participant');
@@ -121,10 +138,28 @@ export class MessagesService {
           uid,
           NotificationType.MESSAGE,
           currentUserId,
-          `/messages?thread=${threadId}`,
+          `/messages?thread=${thread._id}`,
         ),
       ),
     );
+    /** Inquiry-style DM tied to a post → mark a lead for the post owner. */
+    if (dto.postId) {
+      const post = await this.postModel.findById(dto.postId).exec();
+      if (post?.user_id && post.user_id !== currentUserId) {
+        await this.leadsService.upsertEngagementLead(
+          post.user_id,
+          currentUserId,
+          dto.postId,
+        );
+      }
+    } else {
+      /** Plain DM with no post context: still surface a lead per recipient. */
+      await Promise.all(
+        recipientIds.map((uid) =>
+          this.leadsService.upsertEngagementLead(uid, currentUserId, undefined),
+        ),
+      );
+    }
     this.logger.log(
       `broker_buyer_conversation_event thread=${threadId} sender=${currentUserId}`,
     );
@@ -138,5 +173,19 @@ export class MessagesService {
         createdAt: msg.createdAt?.toISOString() ?? new Date().toISOString(),
       },
     };
+  }
+
+  async deleteThread(currentUserId: string, threadId: string) {
+    const thread = await this.threadModel.findById(threadId).exec();
+    if (!thread) throw new NotFoundException('Thread not found');
+    if (!thread.participant_ids.includes(currentUserId)) {
+      throw new BadRequestException('Not a participant');
+    }
+    await this.messageModel.deleteMany({ thread_id: threadId }).exec();
+    await this.threadModel.deleteOne({ _id: threadId }).exec();
+    this.logger.log(
+      `thread_deleted thread=${threadId} actor=${currentUserId}`,
+    );
+    return { ok: true };
   }
 }

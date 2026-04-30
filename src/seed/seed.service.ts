@@ -7,13 +7,13 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { User, UserType, UserStatus } from '../users/schemas/user.schema';
 import {
-  Post,
-  PostStatus,
-  PostType,
-  PostVisibility,
-} from '../posts/schemas/post.schema';
+  User,
+  UserRole,
+  UserStatus,
+  UserType,
+} from '../users/schemas/user.schema';
+import { Post, PostStatus, PostVisibility } from '../posts/schemas/post.schema';
 import {
   PropertyListing,
   PropertyType,
@@ -34,10 +34,26 @@ const SEED_PHONE_PREFIX = '+910000';
 const SEED_PASSWORD = 'Test@1234';
 
 const FIRST_NAMES = [
-  'Aarav', 'Vivaan', 'Aditya', 'Vihaan', 'Arjun',
-  'Sai', 'Reyansh', 'Krishna', 'Ishaan', 'Ayaan',
-  'Aanya', 'Aadhya', 'Saanvi', 'Anaya', 'Diya',
-  'Pari', 'Riya', 'Myra', 'Sara', 'Tara',
+  'Aarav',
+  'Vivaan',
+  'Aditya',
+  'Vihaan',
+  'Arjun',
+  'Sai',
+  'Reyansh',
+  'Krishna',
+  'Ishaan',
+  'Ayaan',
+  'Aanya',
+  'Aadhya',
+  'Saanvi',
+  'Anaya',
+  'Diya',
+  'Pari',
+  'Riya',
+  'Myra',
+  'Sara',
+  'Tara',
 ];
 
 const LOCATIONS = [
@@ -135,7 +151,7 @@ export class SeedService {
         status: UserStatus.ACTIVE,
       });
 
-      created.push(user.toObject() as User);
+      created.push(user.toObject());
     }
 
     return {
@@ -149,6 +165,81 @@ export class SeedService {
         email: u.email,
         type: u.type,
       })),
+    };
+  }
+
+  /**
+   * Create or promote a user with the given phone to admin role.
+   * Phone is normalised to E.164 (assumed +91 if no country code).
+   */
+  async seedAdmin(input: {
+    phone: string;
+    username?: string;
+    email?: string;
+    role?: UserRole;
+  }) {
+    const role = input.role ?? UserRole.ADMIN;
+    if (role !== UserRole.ADMIN && role !== UserRole.SUPER_ADMIN) {
+      throw new BadRequestException(
+        'role must be admin or super_admin',
+      );
+    }
+
+    const digits = (input.phone || '').replace(/\D/g, '');
+    if (digits.length < 10) {
+      throw new BadRequestException(
+        'phone must contain at least 10 digits',
+      );
+    }
+    const phone = input.phone.trim().startsWith('+')
+      ? `+${digits}`
+      : `+91${digits.replace(/^91/, '')}`;
+
+    const existing = await this.userModel.findOne({ phone }).exec();
+    if (existing) {
+      existing.role = role;
+      existing.status = UserStatus.ACTIVE;
+      existing.is_verified = true;
+      await existing.save();
+      this.logger.log(`admin_promoted phone=${phone} role=${role}`);
+      return {
+        action: 'promoted',
+        user: {
+          id: existing._id,
+          username: existing.username,
+          phone: existing.phone,
+          email: existing.email,
+          role: existing.role,
+        },
+      };
+    }
+
+    const username =
+      input.username ?? `admin_${digits.slice(-4)}_${Date.now().toString(36)}`;
+    const passwordHash = await bcrypt.hash(SEED_PASSWORD, 10);
+
+    const user = await this.userModel.create({
+      username,
+      phone,
+      email: input.email,
+      password_hash: passwordHash,
+      is_verified: true,
+      type: UserType.USER,
+      status: UserStatus.ACTIVE,
+      role,
+    });
+
+    this.logger.log(`admin_created phone=${phone} role=${role}`);
+    return {
+      action: 'created',
+      password: SEED_PASSWORD,
+      user: {
+        id: user._id,
+        username: user.username,
+        phone: user.phone,
+        email: user.email,
+        role: user.role,
+      },
     };
   }
 
@@ -274,13 +365,13 @@ export class SeedService {
       .find({ username: { $regex: `^${SEED_USERNAME_PREFIX}` } })
       .select('_id')
       .exec();
-    const userIds = seedUsers.map((u) => u._id).filter(Boolean) as string[];
+    const userIds = seedUsers.map((u) => u._id).filter(Boolean);
 
     const seedPosts = await this.postModel
       .find({ user_id: { $in: userIds } })
       .select('_id')
       .exec();
-    const postIds = seedPosts.map((p) => p._id).filter(Boolean) as string[];
+    const postIds = seedPosts.map((p) => p._id).filter(Boolean);
 
     const [
       deletedListings,
@@ -296,10 +387,7 @@ export class SeedService {
       this.postModel.deleteMany({ _id: { $in: postIds } }).exec(),
       this.feedModel
         .deleteMany({
-          $or: [
-            { user_id: { $in: userIds } },
-            { post_id: { $in: postIds } },
-          ],
+          $or: [{ user_id: { $in: userIds } }, { post_id: { $in: postIds } }],
         })
         .exec(),
       this.userModel.deleteMany({ _id: { $in: userIds } }).exec(),
@@ -331,6 +419,7 @@ export class SeedService {
       username: user.username,
       email: user.email ?? '',
       type: user.type,
+      role: user.role,
     });
 
     return {

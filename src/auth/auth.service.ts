@@ -142,6 +142,7 @@ export class AuthService {
       username: user.username,
       email: user.email ?? '',
       type: user.type,
+      role: user.role,
     });
 
     return {
@@ -187,6 +188,7 @@ export class AuthService {
       username: user.username,
       email: user.email ?? '',
       type: user.type,
+      role: user.role,
     });
 
     return {

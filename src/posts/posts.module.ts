@@ -24,6 +24,8 @@ import { CommentsController } from './comments.controller';
 import { SavedPostsService } from './saved-posts.service';
 import { SavedPostsController } from './saved-posts.controller';
 import { AuthModule } from '../auth/auth.module';
+import { LeadsModule } from '../leads/leads.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -39,6 +41,8 @@ import { AuthModule } from '../auth/auth.module';
       { name: User.name, schema: UserSchema },
     ]),
     AuthModule,
+    LeadsModule,
+    NotificationsModule,
   ],
   controllers: [
     PostsController,

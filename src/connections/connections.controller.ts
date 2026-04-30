@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Header,
   Param,
@@ -63,6 +64,14 @@ export class ConnectionsController {
     return this.connectionsService.declineRequest(
       currentUserId(user),
       requestId,
+    );
+  }
+
+  @Delete(':userId')
+  unfollow(@CurrentUser() user: User, @Param('userId') userId: string) {
+    return this.connectionsService.removeConnection(
+      currentUserId(user),
+      userId,
     );
   }
 }
